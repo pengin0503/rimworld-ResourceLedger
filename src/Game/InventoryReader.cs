@@ -11,9 +11,20 @@ public sealed class InventorySnapshot {
  public List<InventoryItem> Items=new();
  public Dictionary<string,long> Counts=new();
  public long Tick;public double Milliseconds;public int UnsupportedHolders;
+ public static bool Includes(InventoryItem item,string scope,ScopeDefinitionAdapter? custom=null)=>
+  scope=="map"||(item.Locator is not Pawn&&(scope=="stored"?item.Group.Length>0:custom!=null&&custom.Groups.Contains(item.Group)));
  public Dictionary<string,long> Project(string scope,ScopeDefinitionAdapter? custom=null){
   var result=Counts.Keys.ToDictionary(k=>k,k=>0L);
-  foreach(var item in Items)if(scope=="map"||(scope=="stored"?item.Group.Length>0:custom!=null&&custom.Groups.Contains(item.Group)))result[item.Resource]+=item.Count;
+  foreach(var item in Items)if(Includes(item,scope,custom))result[item.Resource]+=item.Count;
+  return result;
+ }
+ public Dictionary<string,long> ProjectConsumed(string scope,IReadOnlyDictionary<Thing,long> consumed,ScopeDefinitionAdapter? custom=null){
+  var result=new Dictionary<string,long>();
+  foreach(var item in Items){
+   if(!Includes(item,scope,custom))continue;
+   long amount=Math.Min(item.Count,Math.Max(0,consumed.GetValueOrDefault(item.Thing)));
+   if(amount>0)result[item.Resource]=result.GetValueOrDefault(item.Resource)+amount;
+  }
   return result;
  }
 }
@@ -56,7 +67,7 @@ public static class InventoryReader {
   foreach(var root in map.listerThings.AllThings){
    if(root.Destroyed||root.Position.Fogged(map))continue;
    string group="";string place=root.LabelCap;
-   var slot=StoreUtility.GetSlotGroup(root);
+   var slot=root is Pawn?null:StoreUtility.GetSlotGroup(root);
    if(slot!=null){group=GroupId(slot);place=slot.GetName();}
    else if(root is Pawn)place=root.LabelShort;
    Walk(root,root,group,place);

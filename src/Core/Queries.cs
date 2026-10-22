@@ -11,7 +11,7 @@ public static class Queries {
  }
  public static Forecast Forecast(Series s,long now,int days){
   var f=new Forecast();var summary=Summarize(s,Math.Max(0,now-Math.Clamp(days,1,600)*60000L),now);f.ObservedDays=(summary.To-summary.From)/60000d;
-  if(!summary.Continuous||f.ObservedDays<1||now-summary.To>60000)return f;
+  if(s.PendingGap||!summary.Continuous||f.ObservedDays<1||now-summary.To>60000)return f;
   if(summary.Net>=0){f.Status="NotDeclining";return f;}f.Available=true;f.Status="Estimate";f.Days=summary.End/-summary.DailyMean;return f;
  }
  public static Summary Combine(IEnumerable<Summary> summaries){

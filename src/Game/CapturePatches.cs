@@ -116,7 +116,7 @@ public static class CapturePatches {
   var list=__args.OfType<List<Thing>>().FirstOrDefault();if(list!=null)__state=list.Where(t=>!t.Destroyed).Select(t=>(t,t.stackCount)).ToList();
  }
  public static Exception? IngredientsFinally(Exception? __exception,List<(Thing Thing,int Count)>? __state){
-  try{if(__state!=null)OperationCapture.AddConsumed(__state.Select(x=>(x.Thing.def.defName,(long)Math.Max(0,x.Count-(x.Thing.Destroyed?0:x.Thing.stackCount)))));}
+  try{if(__state!=null)OperationCapture.AddConsumed(__state.Select(x=>(x.Thing,(long)Math.Max(0,x.Count-(x.Thing.Destroyed?0:x.Thing.stackCount)))));}
   catch(Exception e){LedgerGameComponent.Report(e);}return __exception;
  }
  public static void EggPostfix(Thing? __result){if(__result!=null)Tag(__result,Cause.AnimalProduct,null);}

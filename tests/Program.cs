@@ -59,6 +59,7 @@ Test("Merge keeps gross flows across different sampling intervals",()=>{var a=Se
 Test("Daily chart marks an unrecorded interval as a gap",()=>{var s=new Series{Periods=new(){new Period{From=0,To=2500,Start=100,End=110,In=10},new Period{From=5000,To=7500,Start=110,End=120,In=10}}};Yes(ViewMath.Bars(s,0,7500).Single().Gap);});
 Test("Daily chart preserves unexplained adjustments",()=>{var s=new Series{Periods=new(){new Period{From=0,To=2500,Start=100,End=110,In=10,Adjustment=10}}};Eq(10L,ViewMath.Bars(s,0,2500).Single().Adjustment);});
 FeatureTests.Register(Test);
+ReviewTests.Register(Test);
 if(args.Contains("--contracts"))ContractTests.Register(Test);
 int failed=0;
 foreach(var test in tests){try{test.Item2();Console.WriteLine("PASS "+test.Item1);}catch(Exception e){failed++;Console.WriteLine("FAIL "+test.Item1+": "+e.GetBaseException());}}

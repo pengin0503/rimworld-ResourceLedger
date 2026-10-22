@@ -8,7 +8,7 @@ public static class ViewMath {
  }
  public static Series Merge(IEnumerable<Series> sources){
   var all=sources.ToList();if(all.Count==0)return new Series();if(all.Count==1)return all[0];
-  var result=new Series{Resource=all[0].Resource,Map="all",Scope=all[0].Scope};
+  var result=new Series{Resource=all[0].Resource,Map="all",Scope=all[0].Scope,PendingGap=all.Any(s=>s.PendingGap)};
   var samples=all.Select(s=>s.Samples.ToDictionary(p=>p.Tick)).ToList();
   var ticks=samples[0].Keys.ToHashSet();foreach(var index in samples.Skip(1))ticks.IntersectWith(index.Keys);
   foreach(var tick in ticks.Order())result.Samples.Add(new Sample{Tick=tick,Count=samples.Sum(index=>index[tick].Count),Gap=samples.Any(index=>index[tick].Gap)});

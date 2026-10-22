@@ -13,6 +13,7 @@ public class Ledger {
  public List<AlertRule> Alerts=new();public List<ScopeDefinition> Scopes=new();
  private Dictionary<string,LedgerEvent>? eventIndex;
  public static string Key(string map,string scope,string resource)=>map+"|"+scope+"|"+resource;
+ public void MarkGap(string map){foreach(var series in Series.Values.Where(s=>s.Map==map))series.PendingGap=true;}
  public void EnsureBaseline(string map,string scope,long tick,IReadOnlyDictionary<string,long> counts,IEnumerable<string> resources,bool historical=false){
   if(historical&&scope!="map"&&scope!="stored"&&!Series.Values.Any(s=>s.Map==map&&s.Scope==scope&&s.Samples.Any(p=>p.Tick<=tick)))return;
   var missing=resources.Distinct().Where(id=>!Series.ContainsKey(Key(map,scope,id))).ToDictionary(id=>id,id=>counts.GetValueOrDefault(id));
@@ -55,7 +56,7 @@ public class Ledger {
   foreach(var s in Series.Values){
    var rolled=new List<Period>();
    foreach(var group in s.Periods.Where(p=>p.To<=hourlyCutoff&&p.To>=dailyCutoff).GroupBy(p=>(p.To-1)/60000)){
-    var ordered=group.OrderBy(p=>p.From).ToList();var p=new Period{From=ordered[0].From,To=ordered[^1].To,Start=ordered[0].Start,End=ordered[^1].End,Gap=ordered.Any(x=>x.Gap),Adjustment=ordered.Sum(x=>x.Adjustment)};
+    var ordered=group.OrderBy(p=>p.From).ToList();var p=new Period{From=ordered[0].From,To=ordered[^1].To,Start=ordered[0].Start,End=ordered[^1].End,Gap=ordered.Any(x=>x.Gap)||ordered.Zip(ordered.Skip(1),(a,b)=>a.To!=b.From).Any(x=>x),Adjustment=ordered.Sum(x=>x.Adjustment)};
     foreach(var source in ordered)foreach(var f in source.Flows){AddFlow(p,f.Cause,f.In);AddFlow(p,f.Cause,-f.Out);}rolled.Add(p);
    }
    s.Periods=rolled.Concat(s.Periods.Where(p=>p.To>hourlyCutoff)).OrderBy(p=>p.From).ToList();
@@ -79,5 +80,15 @@ public static class LedgerSerializer {
   using var gzip=new GZipStream(input,CompressionMode.Decompress);
   using var reader=new StreamReader(gzip,Encoding.UTF8);return reader.ReadToEnd();
  }
- public static bool TryLoad(string json,out Ledger? ledger){ledger=null;try{if(json.StartsWith("RLZ1:",StringComparison.Ordinal))json=Unpack(json);using var doc=JsonDocument.Parse(json);if(!doc.RootElement.TryGetProperty("Schema",out var v)||v.GetInt32()!=1)return false;ledger=JsonSerializer.Deserialize<Ledger>(json,Options);return ledger is {Series:not null,Names:not null,MapNames:not null,ResourceMods:not null,Favorites:not null,Events:not null,Tracked:not null,Alerts:not null,Scopes:not null,SeenIds:not null}&&ledger.Series.Values.All(s=>s is {Samples:not null,Periods:not null,Pending:not null}&&s.Samples.All(p=>p!=null)&&s.Periods.All(p=>p is {Flows:not null}))&&ledger.Events.All(e=>e!=null)&&ledger.Alerts.All(a=>a!=null)&&ledger.Scopes.All(s=>s is {Groups:not null});}catch(InvalidDataException){return false;}catch(IOException){return false;}catch(JsonException){return false;}catch(FormatException){return false;}catch(InvalidOperationException){return false;}catch(OverflowException){return false;}}
+ public static bool TryLoad(string json,out Ledger? ledger){
+  ledger=null;
+  try{
+   if(json.StartsWith("RLZ1:",StringComparison.Ordinal))json=Unpack(json);
+   using var doc=JsonDocument.Parse(json);
+   if(!doc.RootElement.TryGetProperty("Schema",out var v)||v.GetInt32()!=1)return false;
+   var candidate=JsonSerializer.Deserialize<Ledger>(json,Options);
+   if(!SaveValidation.Valid(candidate))return false;
+   ledger=candidate;return true;
+  }catch(InvalidDataException){return false;}catch(IOException){return false;}catch(JsonException){return false;}catch(FormatException){return false;}catch(InvalidOperationException){return false;}catch(OverflowException){return false;}
+ }
 }

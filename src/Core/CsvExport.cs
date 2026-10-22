@@ -8,7 +8,7 @@ public static class CsvExport {
  public static string Export(Ledger ledger,IEnumerable<Series> sources,long from,long to,string kind,Func<string,string>? name=null,IReadOnlyDictionary<string,double>? factors=null,string unit="count"){
   name??=r=>ledger.Names.GetValueOrDefault(r,r);var b=new StringBuilder();b.AppendLine("map,scope,resource_id,resource_name,unit,from_tick,to_tick,start,end,increase,decrease,net,continuous,cause,actor,facility");
   foreach(var s in sources){
-   if(s.Samples.Count==0)continue;double factor=factors?.GetValueOrDefault(s.Resource)??1;
+   if(!s.Samples.Any(p=>p.Tick>=from&&p.Tick<=to))continue;double factor=factors?.GetValueOrDefault(s.Resource)??1;
    string Prefix()=>Row(ledger.MapNames.GetValueOrDefault(s.Map,s.Map),s.Scope,s.Resource,name(s.Resource),unit);
    void Emit(long f,long t,long start,long end,long inc,long dec,bool continuous,string cause="",string actor="",string facility="")=>b.AppendLine(Prefix()+","+string.Join(",",new[]{f.ToString(CultureInfo.InvariantCulture),t.ToString(CultureInfo.InvariantCulture),Number(start*factor),Number(end*factor),continuous?Number(inc*factor):"",continuous?Number(dec*factor):"",continuous?Number((end-start)*factor):"",continuous?"true":"false"})+","+Row(cause,actor,facility));
    var sum=Queries.Summarize(s,from,to);

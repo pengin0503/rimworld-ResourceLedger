@@ -57,9 +57,9 @@ public sealed class LedgerWindow : MainTabWindow {
    if(!investigating&&search.Length>0&&!name.Contains(search,StringComparison.CurrentCultureIgnoreCase)&&!id.Contains(search,StringComparison.OrdinalIgnoreCase))continue;
    if(!investigating&&modFilter.Length>0&&source!=modFilter)continue;if(!investigating&&category.Length>0&&cat!=category)continue;
    var sources=Sources(id);var merged=ViewMath.Merge(sources);var summary=Queries.Summarize(merged,range.From,range.To);
-   var forecast=d==null?new Forecast():Queries.Forecast(merged,Find.TickManager.TicksGame,5);
    long? live=null;
    if(d!=null&&mapList.Count>0&&liveCounts.Count==mapList.Count)live=liveCounts.Values.Sum(counts=>counts.GetValueOrDefault(id));
+   var forecast=d==null||!live.HasValue?new Forecast():Queries.Forecast(merged,Find.TickManager.TicksGame,5);
    if(!investigating&&!ResourceSelection.Matches(visibility,live,summary))continue;
    rows.Add(new RowData{Resource=id,Name=name,Mod=source,Category=cat,Sources=sources,Summary=summary,Forecast=forecast,Live=live,Missing=d==null});
   }
@@ -209,9 +209,10 @@ public sealed class LedgerWindow : MainTabWindow {
     lines.Add((TextCatalog.Day(e.Tick)+"  "+T("Cause_"+e.Cause)+"  "+(e.Delta>=0?"+":"")+N(e.Delta*Factor(selected),unit=="count"?0:2)+"  "+e.Actor+"  "+e.Facility,targets.GetValueOrDefault(e.ActorId)??targets.GetValueOrDefault(e.FacilityId)));
   }else{
    foreach(var m in c.Maps.Where(m=>mapChoice=="all"||InventoryReader.MapId(m)==mapChoice)){
-    if(!c.Live.TryGetValue(InventoryReader.MapId(m),out var snap))continue;
+    if(!c.Live.TryGetValue(InventoryReader.MapId(m),out var snap)||snap.UnsupportedHolders>0)continue;
     var chosen=c.Data.Scopes.FirstOrDefault(s=>s.Id==scope);
-    foreach(var group in snap.Items.Where(i=>i.Resource==selected&&(scope=="map"||(scope=="stored"?i.Group.Length>0:chosen?.Groups.Contains(i.Group)==true))).GroupBy(i=>(i.Locator,i.Place)))
+    var custom=chosen==null?null:new ScopeDefinitionAdapter{Groups=chosen.Groups.ToHashSet()};
+    foreach(var group in snap.Items.Where(i=>i.Resource==selected&&InventorySnapshot.Includes(i,scope,custom)).GroupBy(i=>(i.Locator,i.Place)))
      lines.Add((c.Data.MapNames.GetValueOrDefault(InventoryReader.MapId(m),"")+" / "+group.Key.Place+" : "+N(group.Sum(i=>i.Count)),group.Key.Locator));
    }
   }

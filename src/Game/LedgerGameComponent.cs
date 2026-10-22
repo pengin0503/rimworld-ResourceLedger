@@ -42,6 +42,11 @@ public sealed class LedgerGameComponent : GameComponent {
   var resources=Resources;
   foreach(var scope in ScopeIds(map))Data.EnsureBaseline(id,scope,snapshot.Tick,Project(snapshot,scope),resources,historical);
  }
+ public void Invalidate(string map){
+  Data.MarkGap(map);
+  if(Live.TryGetValue(map,out var snapshot))snapshot.UnsupportedHolders=Math.Max(1,snapshot.UnsupportedHolders);
+  Revision++;
+ }
  public void SampleAll(bool force=false){
   if(ReadOnly||Current.ProgramState!=ProgramState.Playing)return;
   try {
@@ -55,7 +60,7 @@ public sealed class LedgerGameComponent : GameComponent {
    var known=Resources;
    foreach(var map in maps){
     var snapshot=InventoryReader.Read(map,known);Live[InventoryReader.MapId(map)]=snapshot;
-    if(snapshot.UnsupportedHolders==0)Discover(snapshot);
+    if(snapshot.UnsupportedHolders==0)Discover(snapshot);else Invalidate(InventoryReader.MapId(map));
    }
    known=Resources;
    foreach(var map in maps){
@@ -78,7 +83,7 @@ public sealed class LedgerGameComponent : GameComponent {
    previousMaps=ids;Data.ActiveMaps=ids.ToList();membershipKnown=true;LastSampleTick=tick;Revision++;
    if(tick>=nextTrim){Data.Trim(tick,new Retention{HourlyDays=settings.HourlyDays,DailyDays=settings.DailyDays,DetailDays=settings.DetailDays,DetailLimit=settings.DetailLimit});nextTrim=tick+2500;}
    EvaluateAlerts(tick);watch.Stop();LastSampleMs=watch.Elapsed.TotalMilliseconds;
-  }catch(Exception ex){Report(ex);}
+  }catch(Exception ex){foreach(var map in Maps)Invalidate(InventoryReader.MapId(map));Report(ex);}
  }
  public override void GameComponentTick()=>SampleAll();
  public override void GameComponentOnGUI(){

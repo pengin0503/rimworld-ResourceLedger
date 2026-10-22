@@ -2,9 +2,9 @@
 
 RimWorld 1.7向けに、物資の在庫・具体的な増減数・原因別内訳を確認するMODです。
 
-[配布版 v0.2.1](https://github.com/pengin0503/rimworld-ResourceLedger/releases/tag/v0.2.1) · [CI](https://github.com/pengin0503/rimworld-ResourceLedger/actions/workflows/verify.yml)
+[配布版 v0.2.2](https://github.com/pengin0503/rimworld-ResourceLedger/releases/tag/v0.2.2) · [CI](https://github.com/pengin0503/rimworld-ResourceLedger/actions/workflows/verify.yml)
 
-0.2.1ではレビューで確認した6系統の不具合を修正しました。詳細は [REVIEW.md](REVIEW.md) を参照してください。
+0.2.2ではレビューで確認した7件の不具合を修正しました。詳細は [REVIEW.md](REVIEW.md) を参照してください。
 
 ## ゲーム内でできること
 
@@ -24,14 +24,14 @@ RimWorld 1.7向けに、物資の在庫・具体的な増減数・原因別内�
 
 必要環境は **RimWorld 1.7（Waylith）とHarmonyの1.7対応版**です。
 
-1. Releasesから `ResourceLedger_0.2.1_Mod.zip` をダウンロードします。
+1. Releasesから `ResourceLedger_0.2.2_Mod.zip` をダウンロードします。
 2. ZIPを展開し、中の `ResourceLedger` フォルダーを `RimWorld/Mods` に配置します。
 3. `Mods/ResourceLedger/About/About.xml` となっていることを確認します。
 4. ゲーム内のMOD一覧で有効にし、Harmony・Coreより後に読み込ませて再起動します。
 5. セーブを読み込み、画面下部の資源台帳アイコンを開きます。
 
 `Source.zip` は開発用です。`bundle.zip` にはゲーム用ZIPとソースZIPが含まれます。
-0.1.0・0.2.0から更新する場合は同じ `ResourceLedger` フォルダーを置き換えてください。パッケージIDは変わっていません。
+0.1.0・0.2.0・0.2.1から更新する場合は同じ `ResourceLedger` フォルダーを置き換えてください。パッケージIDは変わっていません。
 
 ## 追跡範囲と履歴
 
@@ -63,7 +63,7 @@ CSVはサマリー・履歴・原因別・行動明細を出力します。保�
 
 自動テスト、実際の1.7 DLLを使うビルド・API互換性検証、Harmonyの適用／解除、翻訳・XML・配布ZIPの検査を実行しています。詳しくは [VALIDATION.md](VALIDATION.md) を参照してください。
 
-**0.2.1の画面表示・通常プレイ・セーブ更新を実際にゲームで確認する作業は未実施**です。そのためプレリリースとして配布します。
+**0.2.2の画面表示・通常プレイ・セーブ更新を実際にゲームで確認する作業は未実施**です。そのためプレリリースとして配布します。
 
 ## 開発・CI
 

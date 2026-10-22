@@ -3,7 +3,7 @@
  <name>Resource Ledger / 資源台帳</name>
  <author>pengin0503</author>
  <packageId>pengin0503.resourceledger</packageId>
- <modVersion>0.2.1</modVersion>
+ <modVersion>0.2.2</modVersion>
  <supportedVersions>
   <li>1.7</li>
  </supportedVersions>
@@ -18,7 +18,7 @@
   <li>brrainz.harmony</li>
   <li>Ludeon.RimWorld</li>
  </loadAfter>
- <description>全種類の所有物資の在庫・具体的な増減数・原因別内訳を確認します。在庫の棒と増減の折れ線を同時表示し、左右の軸を読みやすく調整。絞り込み、比較、予測、通知、所在、CSVに対応。途中セーブへの追加を想定し、導入後から記録します。Harmonyの1.7対応版が必要です。0.2.1は画面表示・通常プレイの実機確認前の試用版です。
+ <description>全種類の所有物資の在庫・具体的な増減数・原因別内訳を確認します。在庫の棒と増減の折れ線を同時表示し、左右の軸を読みやすく調整。絞り込み、比較、予測、通知、所在、CSVに対応。途中セーブへの追加を想定し、導入後から記録します。Harmonyの1.7対応版が必要です。0.2.2は画面表示・通常プレイの実機確認前の試用版です。
 Resource stock bars, signed flow lines, exact quantities and cause breakdowns. Automatically discovers owned item types. Filtering, comparisons, alerts, locations and CSV. Requires Harmony for RimWorld 1.7. Experimental release: in-game UI and gameplay verification remain pending.</description>
  <url>https://github.com/pengin0503/rimworld-ResourceLedger</url>
 </ModMetaData>

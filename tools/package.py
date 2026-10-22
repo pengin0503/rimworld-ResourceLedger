@@ -23,7 +23,7 @@ def main():
     with zipfile.ZipFile(install,'w',zipfile.ZIP_DEFLATED) as z:
         for p in sorted((ROOT/'mod').rglob('*')):
             if p.is_file():z.write(p,'ResourceLedger/'+p.relative_to(ROOT/'mod').as_posix())
-        for name in ['README.md','VALIDATION.md','LICENSE']:z.write(ROOT/name,'ResourceLedger/'+name)
+        for name in ['README.md','VALIDATION.md','REVIEW.md','LICENSE']:z.write(ROOT/name,'ResourceLedger/'+name)
     allowed={'src','tests','tools','mod','docs','.github'}
     root_files={'ResourceLedger.csproj','Directory.Build.props','NuGet.Config','build.ps1','README.md','VALIDATION.md','REVIEW.md','LICENSE','.gitignore','.gitattributes'}
     with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED) as z:

@@ -1,0 +1,61 @@
+using System.Text.Json;
+namespace ResourceLedger.Core;
+public class Ledger {
+ public int Schema=1;public bool DefaultsSeeded;
+ public Dictionary<string,Series> Series=new();
+ public Dictionary<string,string> Names=new(),MapNames=new(),ResourceMods=new(),Topology=new();
+ public Dictionary<string,double> NutritionFactors=new(),ValueFactors=new();
+ public Dictionary<string,long> SeenIds=new();
+ public List<LedgerEvent> Events=new();
+ public List<string> Tracked=new(),Favorites=new(),ActiveMaps=new();
+ public List<AlertRule> Alerts=new();public List<ScopeDefinition> Scopes=new();
+ private Dictionary<string,LedgerEvent>? eventIndex;
+ public static string Key(string map,string scope,string resource)=>map+"|"+scope+"|"+resource;
+ public void Observe(string map,string scope,long tick,IReadOnlyDictionary<string,long> counts,bool discontinuity=false){
+  foreach(var (resource,count) in counts){
+   var key=Key(map,scope,resource);
+   if(!Series.TryGetValue(key,out var s))Series[key]=s=new Series{Map=map,Scope=scope,Resource=resource};
+   var prev=s.Samples.LastOrDefault();
+   if(prev==null){s.Samples.Add(new Sample{Tick=tick,Count=count});s.Pending.Clear();continue;}
+   if(tick<=prev.Tick){s.PendingGap|=discontinuity;continue;}
+   var p=new Period{From=prev.Tick,To=tick,Start=prev.Count,End=count,Gap=discontinuity||s.PendingGap};s.PendingGap=false;
+   if(!p.Gap){
+    eventIndex??=Events.Where(e=>e.Id.Length>0).GroupBy(e=>e.Id).ToDictionary(g=>g.Key,g=>g.Last());
+    foreach(var e in s.Pending.Where(e=>e.Tick<=tick)){AddFlow(p,e.Cause,e.Delta);e.ClosedAt=tick;if(eventIndex.TryGetValue(e.Id,out var detail))detail.ClosedAt=tick;}
+    p.Adjustment=count-prev.Count-(p.In-p.Out);
+    if(p.Adjustment!=0){AddFlow(p,Cause.Unclassified,p.Adjustment);var adjustment=new LedgerEvent{Id="adjust:"+key+":"+tick,Map=map,Scope=scope,Resource=resource,Tick=tick,ClosedAt=tick,Delta=p.Adjustment,Cause=Cause.Unclassified};Events.Add(adjustment);eventIndex[adjustment.Id]=adjustment;}
+   }
+   s.Pending.RemoveAll(e=>e.Tick<=tick);s.Periods.Add(p);s.Samples.Add(new Sample{Tick=tick,Count=count,Gap=p.Gap});
+  }
+ }
+ public void Record(LedgerEvent e){
+  if(e.Id.Length==0)e.Id=Guid.NewGuid().ToString("N");
+  if(e.Delta==0||(e.Id.Length>0&&SeenIds.ContainsKey(e.Id)))return;
+  if(!Series.TryGetValue(Key(e.Map,e.Scope,e.Resource),out var s)||s.Samples.Count==0||e.Tick<s.Samples[^1].Tick)return;
+  if(e.Id.Length>0)SeenIds[e.Id]=e.Tick;s.Pending.Add(e);Events.Add(e);if(eventIndex!=null)eventIndex[e.Id]=e;
+ }
+ public static void AddFlow(Period p,Cause cause,long delta){
+  var f=p.Flows.FirstOrDefault(f=>f.Cause==cause);if(f==null)p.Flows.Add(f=new Flow{Cause=cause});
+  if(delta>0){f.In+=delta;p.In+=delta;}else{f.Out-=delta;p.Out-=delta;}
+ }
+ public void Trim(long now,Retention policy){
+  var hourlyCutoff=now-Math.Max(1,policy.HourlyDays)*60000L;var dailyCutoff=now-Math.Max(policy.HourlyDays,policy.DailyDays)*60000L;
+  foreach(var s in Series.Values){
+   var rolled=new List<Period>();
+   foreach(var group in s.Periods.Where(p=>p.To<=hourlyCutoff&&p.To>=dailyCutoff).GroupBy(p=>(p.To-1)/60000)){
+    var ordered=group.OrderBy(p=>p.From).ToList();var p=new Period{From=ordered[0].From,To=ordered[^1].To,Start=ordered[0].Start,End=ordered[^1].End,Gap=ordered.Any(x=>x.Gap),Adjustment=ordered.Sum(x=>x.Adjustment)};
+    foreach(var source in ordered)foreach(var f in source.Flows){AddFlow(p,f.Cause,f.In);AddFlow(p,f.Cause,-f.Out);}rolled.Add(p);
+   }
+   s.Periods=rolled.Concat(s.Periods.Where(p=>p.To>hourlyCutoff)).OrderBy(p=>p.From).ToList();
+   if(s.Periods.Count>0){s.Samples=new(){new Sample{Tick=s.Periods[0].From,Count=s.Periods[0].Start}};s.Samples.AddRange(s.Periods.Select(p=>new Sample{Tick=p.To,Count=p.End,Gap=p.Gap}));}else if(s.Samples.Count>1)s.Samples=new(){s.Samples[^1]};
+  }
+  var cutoff=now-Math.Max(0,policy.DetailDays)*60000L;Events.RemoveAll(e=>e.Tick<cutoff);var cap=Math.Max(0,policy.DetailLimit);if(Events.Count>cap)Events.RemoveRange(0,Events.Count-cap);
+  foreach(var key in SeenIds.Where(x=>x.Value<cutoff).Select(x=>x.Key).ToArray())SeenIds.Remove(key);
+  eventIndex=null;
+ }
+}
+public static class LedgerSerializer {
+ public static readonly JsonSerializerOptions Options=new(){IncludeFields=true,IgnoreReadOnlyProperties=true};
+ public static string Save(Ledger ledger)=>JsonSerializer.Serialize(ledger,Options);
+ public static bool TryLoad(string json,out Ledger? ledger){ledger=null;try{using var doc=JsonDocument.Parse(json);if(!doc.RootElement.TryGetProperty("Schema",out var v)||v.GetInt32()!=1)return false;ledger=JsonSerializer.Deserialize<Ledger>(json,Options);return ledger is {Series:not null,Names:not null,MapNames:not null,ResourceMods:not null,Favorites:not null,Events:not null,Tracked:not null,Alerts:not null,Scopes:not null,SeenIds:not null}&&ledger.Series.Values.All(s=>s is {Samples:not null,Periods:not null,Pending:not null}&&s.Samples.All(p=>p!=null)&&s.Periods.All(p=>p is {Flows:not null}))&&ledger.Events.All(e=>e!=null)&&ledger.Alerts.All(a=>a!=null)&&ledger.Scopes.All(s=>s is {Groups:not null});}catch(JsonException){return false;}catch(FormatException){return false;}catch(InvalidOperationException){return false;}catch(OverflowException){return false;}}
+}

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+ <RL_Title>Resource Ledger</RL_Title>
+ <RL_Resource>Resource</RL_Resource>
+ <RL_Count>Count</RL_Count>
+ <RL_Nutrition>Nutrition</RL_Nutrition>
+ <RL_MarketValue>Value at current definition prices</RL_MarketValue>
+ <RL_Day>Day {0}</RL_Day>
+ <RL_Days>Last {0} days</RL_Days>
+ <RL_DaysShort>{0} days</RL_DaysShort>
+ <RL_NoHistory>Not enough recorded data. Zero-baseline series cannot use relative mode.</RL_NoHistory>
+ <RL_Gap>Incomplete / discontinuous period</RL_Gap>
+ <RL_Recorded>Recorded period</RL_Recorded>
+ <RL_Current>Current</RL_Current>
+ <RL_Start>Start</RL_Start>
+ <RL_End>End</RL_End>
+ <RL_Increase>Increase</RL_Increase>
+ <RL_Decrease>Decrease</RL_Decrease>
+ <RL_Net>Net</RL_Net>
+ <RL_Percent>Change %</RL_Percent>
+ <RL_Daily>Mean / day</RL_Daily>
+ <RL_Forecast>Days left</RL_Forecast>
+ <RL_Name>Name</RL_Name>
+ <RL_CaptureCauses>Capture causes</RL_CaptureCauses>
+ <RL_CaptureTransfers>Capture hauling and map transfers</RL_CaptureTransfers>
+ <RL_IntervalHours>Snapshot interval: {0} game hours</RL_IntervalHours>
+ <RL_HourlyDays>Hourly history: {0} days</RL_HourlyDays>
+ <RL_DailyDays>Daily history: {0} days</RL_DailyDays>
+ <RL_DetailDays>Detailed event history: {0} days</RL_DetailDays>
+ <RL_DetailLimit>Maximum detail records: {0}</RL_DetailLimit>
+ <RL_RecordingHint>Changing retention affects saved history at the next sample. Unknown mod actions remain unclassified. Capture scans occur at completed operations; check diagnostics for cost.</RL_RecordingHint>
+ <RL_Recording>Recording settings</RL_Recording>
+ <RL_Tracking>Tracked resources</RL_Tracking>
+ <RL_NewScope>New storage scope</RL_NewScope>
+ <RL_Create>Create</RL_Create>
+ <RL_Save>Save</RL_Save>
+ <RL_Alerts>Resource alerts</RL_Alerts>
+ <RL_Map>Map</RL_Map>
+ <RL_Enabled>Enabled</RL_Enabled>
+ <RL_Muted>Muted</RL_Muted>
+ <RL_Threshold>Threshold (raw count / % / days)</RL_Threshold>
+ <RL_Hysteresis>Recovery margin</RL_Hysteresis>
+ <RL_Cooldown>Repeat interval: {0} days</RL_Cooldown>
+ <RL_DeleteRule>Delete this rule</RL_DeleteRule>
+ <RL_AlertHint>Rules apply to this resource, map and scope. Drop and forecast rules use the last 5 days. Notification values use item counts, independently of the graph unit.</RL_AlertHint>
+ <RL_InvalidNumber>Enter finite, nonnegative numbers.</RL_InvalidNumber>
+ <RL_Alert_Below>Below stock limit</RL_Alert_Below>
+ <RL_Alert_Above>Above stock limit</RL_Alert_Above>
+ <RL_Alert_DropAmount>Drop amount</RL_Alert_DropAmount>
+ <RL_Alert_DropPercent>Drop percentage</RL_Alert_DropPercent>
+ <RL_Alert_Days>Estimated days remaining</RL_Alert_Days>
+ <RL_AlertMessage>Resource Ledger: {0} / {1}; threshold {2}, stock {3}</RL_AlertMessage>
+ <RL_Other>Other</RL_Other>
+ <RL_NoColony>Open a player settlement to view resource data.</RL_NoColony>
+ <RL_UnsupportedSave>This save contains an unsupported or damaged Resource Ledger payload. It is preserved unchanged; recording is disabled.</RL_UnsupportedSave>
+ <RL_AllMaps>All active settlements</RL_AllMaps>
+ <RL_ScopeMap>Whole map + carried items</RL_ScopeMap>
+ <RL_ScopeStored>Storage only</RL_ScopeStored>
+ <RL_CustomPeriod>Custom period</RL_CustomPeriod>
+ <RL_CustomPeriodHint>Start and end in elapsed game days, e.g. 10.0 to 15.0.</RL_CustomPeriodHint>
+ <RL_AllMods>All source mods</RL_AllMods>
+ <RL_AllCategories>All categories</RL_AllCategories>
+ <RL_Favorites>Favorites only</RL_Favorites>
+ <RL_Back>Back to list</RL_Back>
+ <RL_Compare>Compare selected</RL_Compare>
+ <RL_Columns>Visible columns</RL_Columns>
+ <RL_Diagnostics>Diagnostics</RL_Diagnostics>
+ <RL_Export>Export CSV</RL_Export>
+ <RL_Export_summary>Period summary</RL_Export_summary>
+ <RL_Export_history>Recorded history</RL_Export_history>
+ <RL_Export_causes>Cause breakdown</RL_Export_causes>
+ <RL_Export_events>Retained event details</RL_Export_events>
+ <RL_Exported>CSV exported in the selected unit:
+{0}</RL_Exported>
+ <RL_AttributionHint>Unclassified = reconciliation difference. Zero difference does not guarantee every cause was captured.</RL_AttributionHint>
+ <RL_Status>Last sample: {0} | {1} ms | {2} history points | {3} detail records</RL_Status>
+ <RL_DiagnosticsText>Completed captures: {0}
+Inventory scan time in captures: {1} ms (cumulative)
+Tracked resources: {2}
+History points: {3}
+Detail records: {4}</RL_DiagnosticsText>
+ <RL_CaptureMethods>Installed capture methods: {0}</RL_CaptureMethods>
+ <RL_RecordedPeriod>Recorded comparison: {0} — {1}</RL_RecordedPeriod>
+ <RL_MissingDefinition>Item definition removed; showing retained history.</RL_MissingDefinition>
+ <RL_NoResources>No matching resources. Use Tracked resources to select items.</RL_NoResources>
+ <RL_Summary>Stock {0}   +{1} / −{2}   Net {3}   Remaining {4}</RL_Summary>
+ <RL_Insufficient>Not enough data</RL_Insufficient>
+ <RL_NotDeclining>No decline</RL_NotDeclining>
+ <RL_Estimate>Estimate</RL_Estimate>
+ <RL_ForecastHint>Forecast: last 5 days, using {0} days of continuous history; trade and transfers included.</RL_ForecastHint>
+ <RL_Relative>Relative change (%)</RL_Relative>
+ <RL_DailyBars>Daily increase / decrease</RL_DailyBars>
+ <RL_Causes>Cause totals</RL_Causes>
+ <RL_Events>Event details</RL_Events>
+ <RL_Locations>Locations (click to jump)</RL_Locations>
+ <RL_FlowHeader>Cause                         Increase / Decrease</RL_FlowHeader>
+ <RL_Adjustment>Unclassified signed difference: {0}</RL_Adjustment>
+ <RL_DetailRetention>Details retained for {0} days / up to {1} records. Older aggregate totals are retained.</RL_DetailRetention>
+ <RL_Cause_Mining>Mining</RL_Cause_Mining>
+ <RL_Cause_DeepMining>Deep drilling</RL_Cause_DeepMining>
+ <RL_Cause_Harvest>Harvest</RL_Cause_Harvest>
+ <RL_Cause_Logging>Logging</RL_Cause_Logging>
+ <RL_Cause_Production>Production / cooking / refining</RL_Cause_Production>
+ <RL_Cause_RecipeMaterial>Recipe materials</RL_Cause_RecipeMaterial>
+ <RL_Cause_Construction>Construction inputs</RL_Cause_Construction>
+ <RL_Cause_Recovery>Salvage / recovery</RL_Cause_Recovery>
+ <RL_Cause_Food>Eating</RL_Cause_Food>
+ <RL_Cause_Drug>Drug consumption</RL_Cause_Drug>
+ <RL_Cause_Medical>Medical treatment</RL_Cause_Medical>
+ <RL_Cause_Surgery>Surgery</RL_Cause_Surgery>
+ <RL_Cause_Fuel>Refueling</RL_Cause_Fuel>
+ <RL_Cause_AnimalProduct>Animal products</RL_Cause_AnimalProduct>
+ <RL_Cause_Purchase>Purchase</RL_Cause_Purchase>
+ <RL_Cause_Sale>Sale</RL_Cause_Sale>
+ <RL_Cause_Gift>Gift</RL_Cause_Gift>
+ <RL_Cause_Reward>Quest supplies / rewards</RL_Cause_Reward>
+ <RL_Cause_TransferIn>Transfer in</RL_Cause_TransferIn>
+ <RL_Cause_TransferOut>Transfer out</RL_Cause_TransferOut>
+ <RL_Cause_ScopeIn>Moved into scope</RL_Cause_ScopeIn>
+ <RL_Cause_ScopeOut>Moved out of scope</RL_Cause_ScopeOut>
+ <RL_Cause_Rot>Rot loss</RL_Cause_Rot>
+ <RL_Cause_Loss>Destruction / loss</RL_Cause_Loss>
+ <RL_Cause_Unclassified>Unclassified adjustment</RL_Cause_Unclassified>
+ <RL_StorageUnavailable>Could not read {0} storage holders. Recording for affected maps is suspended.</RL_StorageUnavailable>
+</LanguageData>

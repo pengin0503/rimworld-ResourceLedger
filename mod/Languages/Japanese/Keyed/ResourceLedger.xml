@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+ <RL_Title>資源台帳</RL_Title>
+ <RL_Resource>資源</RL_Resource>
+ <RL_Count>個数</RL_Count>
+ <RL_Nutrition>栄養量</RL_Nutrition>
+ <RL_MarketValue>現在の定義値で換算した価値</RL_MarketValue>
+ <RL_Day>経過日数 {0}日</RL_Day>
+ <RL_Days>直近{0}日</RL_Days>
+ <RL_DaysShort>{0}日</RL_DaysShort>
+ <RL_NoHistory>記録が不足しています。開始数が0の系列は相対表示できません。</RL_NoHistory>
+ <RL_Gap>記録不足・不連続区間</RL_Gap>
+ <RL_Recorded>記録済みの期間</RL_Recorded>
+ <RL_Current>現在庫</RL_Current>
+ <RL_Start>開始数</RL_Start>
+ <RL_End>終了数</RL_End>
+ <RL_Increase>増加</RL_Increase>
+ <RL_Decrease>減少</RL_Decrease>
+ <RL_Net>純増減</RL_Net>
+ <RL_Percent>増減率</RL_Percent>
+ <RL_Daily>日平均</RL_Daily>
+ <RL_Forecast>残日数</RL_Forecast>
+ <RL_Name>名前</RL_Name>
+ <RL_CaptureCauses>原因別の収支を記録する</RL_CaptureCauses>
+ <RL_CaptureTransfers>運搬・マップ間移動も記録する</RL_CaptureTransfers>
+ <RL_IntervalHours>在庫の記録間隔：ゲーム内{0}時間</RL_IntervalHours>
+ <RL_HourlyDays>時間単位の履歴：{0}日分</RL_HourlyDays>
+ <RL_DailyDays>日次履歴：{0}日分</RL_DailyDays>
+ <RL_DetailDays>行動明細：{0}日分</RL_DetailDays>
+ <RL_DetailLimit>行動明細の最大件数：{0}</RL_DetailLimit>
+ <RL_RecordingHint>保存期間を短くすると次の記録時に古い履歴を削除します。未対応MODの処理は原因未分類になります。原因記録では操作の前後に在庫を確認します。負荷は診断画面で確認できます。</RL_RecordingHint>
+ <RL_Recording>記録設定</RL_Recording>
+ <RL_Tracking>追跡資源</RL_Tracking>
+ <RL_NewScope>保管場所の集計範囲を作成</RL_NewScope>
+ <RL_Create>作成</RL_Create>
+ <RL_Save>保存</RL_Save>
+ <RL_Alerts>資源の通知</RL_Alerts>
+ <RL_Map>拠点</RL_Map>
+ <RL_Enabled>有効</RL_Enabled>
+ <RL_Muted>通知をミュート</RL_Muted>
+ <RL_Threshold>しきい値（元の個数／％／日数）</RL_Threshold>
+ <RL_Hysteresis>解除条件の余裕幅</RL_Hysteresis>
+ <RL_Cooldown>再通知間隔：{0}日</RL_Cooldown>
+ <RL_DeleteRule>この条件を削除</RL_DeleteRule>
+ <RL_AlertHint>条件はこの資源・拠点・集計範囲に適用します。減少量・予測の評価には直近5日分を使います。通知の数量はグラフの表示単位にかかわらず個数です。</RL_AlertHint>
+ <RL_InvalidNumber>0以上の有効な数値を入力してください。</RL_InvalidNumber>
+ <RL_Alert_Below>在庫が下限未満</RL_Alert_Below>
+ <RL_Alert_Above>在庫が上限超過</RL_Alert_Above>
+ <RL_Alert_DropAmount>期間内の減少数</RL_Alert_DropAmount>
+ <RL_Alert_DropPercent>期間内の減少率</RL_Alert_DropPercent>
+ <RL_Alert_Days>推定残日数</RL_Alert_Days>
+ <RL_AlertMessage>資源台帳：{0}／{1}（しきい値 {2}、現在庫 {3}）</RL_AlertMessage>
+ <RL_Other>その他</RL_Other>
+ <RL_NoColony>プレイヤーの拠点を開くと資源情報を確認できます。</RL_NoColony>
+ <RL_UnsupportedSave>このセーブの資源台帳データは未対応の版、または読み取れない状態です。元データを保持し、記録を停止しています。</RL_UnsupportedSave>
+ <RL_AllMaps>現在の全拠点</RL_AllMaps>
+ <RL_ScopeMap>マップ全体＋所属ポーンの携帯品</RL_ScopeMap>
+ <RL_ScopeStored>保管場所内のみ</RL_ScopeStored>
+ <RL_CustomPeriod>期間を指定</RL_CustomPeriod>
+ <RL_CustomPeriodHint>開始・終了の経過日数を指定します。例：10.0～15.0日。</RL_CustomPeriodHint>
+ <RL_AllMods>追加元MOD：すべて</RL_AllMods>
+ <RL_AllCategories>分類：すべて</RL_AllCategories>
+ <RL_Favorites>お気に入りのみ</RL_Favorites>
+ <RL_Back>一覧へ戻る</RL_Back>
+ <RL_Compare>選択資源を比較</RL_Compare>
+ <RL_Columns>表示列</RL_Columns>
+ <RL_Diagnostics>診断</RL_Diagnostics>
+ <RL_Export>CSV出力</RL_Export>
+ <RL_Export_summary>期間の収支一覧</RL_Export_summary>
+ <RL_Export_history>在庫・収支履歴</RL_Export_history>
+ <RL_Export_causes>原因別集計</RL_Export_causes>
+ <RL_Export_events>保存中の行動明細</RL_Export_events>
+ <RL_Exported>選択した表示単位でCSVを出力しました：
+{0}</RL_Exported>
+ <RL_AttributionHint>原因未分類は在庫と収支の差分です。差分が0でも、すべての原因を記録できたことは保証しません。</RL_AttributionHint>
+ <RL_Status>最終記録：{0}｜記録処理 {1} ms｜履歴 {2}点｜明細 {3}件</RL_Status>
+ <RL_DiagnosticsText>完了した原因記録：{0}回
+原因記録内の在庫確認：累計 {1} ms
+追跡資源：{2}
+履歴点数：{3}
+明細：{4}件</RL_DiagnosticsText>
+ <RL_CaptureMethods>接続済みの記録メソッド：{0}</RL_CaptureMethods>
+ <RL_RecordedPeriod>比較した記録期間：{0} ～ {1}</RL_RecordedPeriod>
+ <RL_MissingDefinition>アイテム定義が存在しないため、保存済み履歴を表示します。</RL_MissingDefinition>
+ <RL_NoResources>該当する資源がありません。「追跡資源」から対象を選べます。</RL_NoResources>
+ <RL_Summary>現在庫 {0}　増加 ＋{1}／減少 −{2}　純増減 {3}　推定残日数 {4}</RL_Summary>
+ <RL_Insufficient>記録不足</RL_Insufficient>
+ <RL_NotDeclining>減少傾向なし</RL_NotDeclining>
+ <RL_Estimate>推定</RL_Estimate>
+ <RL_ForecastHint>予測は直近5日を対象とし、連続した{0}日分を使用。売買・移出入の影響も含みます。</RL_ForecastHint>
+ <RL_Relative>開始数からの変化率（％）</RL_Relative>
+ <RL_DailyBars>日別の増加・減少</RL_DailyBars>
+ <RL_Causes>原因別集計</RL_Causes>
+ <RL_Events>行動明細</RL_Events>
+ <RL_Locations>所在（クリックで移動）</RL_Locations>
+ <RL_FlowHeader>原因　　　　　　　　　増加／減少</RL_FlowHeader>
+ <RL_Adjustment>原因未分類の差分合計：{0}</RL_Adjustment>
+ <RL_DetailRetention>明細は直近{0}日・最大{1}件まで保存。古い明細の集計値は別に保持します。</RL_DetailRetention>
+ <RL_Cause_Mining>採掘</RL_Cause_Mining>
+ <RL_Cause_DeepMining>深部採掘</RL_Cause_DeepMining>
+ <RL_Cause_Harvest>収穫</RL_Cause_Harvest>
+ <RL_Cause_Logging>伐採</RL_Cause_Logging>
+ <RL_Cause_Production>製造・調理・精錬</RL_Cause_Production>
+ <RL_Cause_RecipeMaterial>製造・調理の材料</RL_Cause_RecipeMaterial>
+ <RL_Cause_Construction>建築への投入</RL_Cause_Construction>
+ <RL_Cause_Recovery>解体・回収</RL_Cause_Recovery>
+ <RL_Cause_Food>食事</RL_Cause_Food>
+ <RL_Cause_Drug>薬物摂取</RL_Cause_Drug>
+ <RL_Cause_Medical>治療</RL_Cause_Medical>
+ <RL_Cause_Surgery>手術</RL_Cause_Surgery>
+ <RL_Cause_Fuel>燃料補充</RL_Cause_Fuel>
+ <RL_Cause_AnimalProduct>畜産物</RL_Cause_AnimalProduct>
+ <RL_Cause_Purchase>購入</RL_Cause_Purchase>
+ <RL_Cause_Sale>売却</RL_Cause_Sale>
+ <RL_Cause_Gift>贈与</RL_Cause_Gift>
+ <RL_Cause_Reward>クエスト物資・報酬</RL_Cause_Reward>
+ <RL_Cause_TransferIn>移入</RL_Cause_TransferIn>
+ <RL_Cause_TransferOut>移出</RL_Cause_TransferOut>
+ <RL_Cause_ScopeIn>集計範囲への搬入</RL_Cause_ScopeIn>
+ <RL_Cause_ScopeOut>集計範囲からの搬出</RL_Cause_ScopeOut>
+ <RL_Cause_Rot>腐敗による損失</RL_Cause_Rot>
+ <RL_Cause_Loss>破壊・損失</RL_Cause_Loss>
+ <RL_Cause_Unclassified>原因未分類の調整差</RL_Cause_Unclassified>
+ <RL_StorageUnavailable>{0}件の収納を読み取れません。該当マップの記録を保留しています。</RL_StorageUnavailable>
+</LanguageData>

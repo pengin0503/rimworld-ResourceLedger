@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+ <name>Resource Ledger / 資源台帳</name><author>pengin0503</author><packageId>pengin0503.resourceledger</packageId><modVersion>0.1.0</modVersion>
+ <supportedVersions><li>1.7</li></supportedVersions>
+ <modDependencies><li><packageId>brrainz.harmony</packageId><displayName>Harmony</displayName><steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl></li></modDependencies>
+ <loadAfter><li>brrainz.harmony</li><li>Ludeon.RimWorld</li></loadAfter>
+ <description>資源の現在庫・期間収支・原因別内訳を、数値とグラフで確認できます。MOD追加資源の選択、比較、不足予測、通知、保管場所への移動、CSV出力に対応。途中セーブに追加でき、導入後から記録します。原因を特定できない差分は原因未分類として表示します。Harmonyの1.7対応版が必要です。0.1.0はゲーム画面での実機確認前の試験版です。
+Resource stock, exact period deltas, cause breakdowns, graphs, comparisons, alerts, locations and CSV exports. Safe-by-design mid-save addition; recording starts after installation. Unsupported changes remain unclassified. Requires Harmony for 1.7. Experimental build; in-game UI and gameplay validation are pending.</description>
+</ModMetaData>

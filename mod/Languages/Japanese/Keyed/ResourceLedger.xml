@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <LanguageData>
  <RL_Title>資源台帳</RL_Title>
  <RL_Resource>資源</RL_Resource>
@@ -30,7 +30,7 @@
  <RL_DetailLimit>行動明細の最大件数：{0}</RL_DetailLimit>
  <RL_RecordingHint>保存期間を短くすると次の記録時に古い履歴を削除します。未対応MODの処理は原因未分類になります。原因記録では操作の前後に在庫を確認します。負荷は診断画面で確認できます。</RL_RecordingHint>
  <RL_Recording>記録設定</RL_Recording>
- <RL_Tracking>追跡資源</RL_Tracking>
+ <RL_Tracking>追跡一覧</RL_Tracking>
  <RL_NewScope>保管場所の集計範囲を作成</RL_NewScope>
  <RL_Create>作成</RL_Create>
  <RL_Save>保存</RL_Save>
@@ -122,4 +122,22 @@
  <RL_Cause_Loss>破壊・損失</RL_Cause_Loss>
  <RL_Cause_Unclassified>原因未分類の調整差</RL_Cause_Unclassified>
  <RL_StorageUnavailable>{0}件の収納を読み取れません。該当マップの記録を保留しています。</RL_StorageUnavailable>
+ <RL_Stock>在庫</RL_Stock>
+ <RL_Change>増減</RL_Change>
+ <RL_GroupDays>集計：{0}日</RL_GroupDays>
+ <RL_GroupHours>集計：{0}時間</RL_GroupHours>
+ <RL_ChartLegend>棒＝在庫／実線＝増加／破線＝減少／点線＝純増減</RL_ChartLegend>
+ <RL_AxisStep>{0}：1目盛り {1} {2}</RL_AxisStep>
+ <RL_PartialBucket>端数区間です。表示値は、この記録区間の合計です。</RL_PartialBucket>
+ <RL_Visibility_Owned>現在庫あり</RL_Visibility_Owned>
+ <RL_Visibility_Changed>期間中に変動あり</RL_Visibility_Changed>
+ <RL_Visibility_History>履歴あり・全種類</RL_Visibility_History>
+ <RL_SearchHint>物資名または識別名で検索します。絞り込んでも全物資の記録を続けます。</RL_SearchHint>
+ <RL_Refresh>更新</RL_Refresh>
+ <RL_LiveStockHint>現在庫は直近の在庫確認時点の数量です。グラフは定期記録時点を表示します。</RL_LiveStockHint>
+ <RL_AutomaticTracking>所有した全種類の物資を自動追跡中：{0}種類。武器・衣服・装備品も含みます。在庫がゼロになっても履歴を保持し、メイン画面で絞り込めます。</RL_AutomaticTracking>
+ <RL_GroupAuto>集計：自動</RL_GroupAuto>
+ <RL_GroupHour>集計：1時間</RL_GroupHour>
+ <RL_GroupDay>集計：1日</RL_GroupDay>
+ <RL_RecordedRangeOnly>選択期間のうち、実際に記録がある範囲を拡大表示しています。記録開始前の履歴は補完しません。</RL_RecordedRangeOnly>
 </LanguageData>

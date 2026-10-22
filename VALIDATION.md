@@ -1,79 +1,45 @@
-# Validation / 検証結果
-対象リリース: Resource Ledger 0.1.0（試験版）
-日付: 2026-10-22
+# 検証記録 — Resource Ledger 0.2.0
 
-## 環境
-- Windows上の.NET SDK 10.0.401 / .NET 10.0.12。
-- 実際に参照した本体: RimWorld 1.7.4985 rev1269。
-- ゲーム同梱UnityStubsと、Harmony MODの1.7用0Harmony.dllを参照。
-- ゲーム本体、Harmony、.NETのDLLは配布物へ含めない。
+2026-10-22。ゲーム内での通常プレイ確認は未実施です。
 
-参照ファイルのSHA-256:
-| ファイル | SHA-256 |
+## 実行した検証
+
+- .NET SDK 10.0.401、実際のRimWorld 1.7 DLLを参照するReleaseビルド：警告0、エラー0。
+- コア・API互換性テスト：69件。純増減の保存則、原因不明差分、重複防止、欠測、時間境界、期間比較、予測、通知、CSV、旧保存形式、圧縮保存、全種類の発見、表示フィルター、初回入手、カスタム保管範囲の開始時刻、梱包済み家具の実際の種類を含みます。
+- Harmony：実際の1.7の41メソッドを解決し、パッチの適用・解除を独立したテストプロセスで実行。
+- ビルド指紋のテスト：4件。未変更ビルドの受け入れ、ソース変更後の拒否、DLL変更の拒否、改行コード差の吸収。
+- XML：8ファイル。日本語／英語：135キーの対応・プレースホルダー一致。
+- 透過PNGとMainButtonDefのアイコンパス、配布DLLのPEヘッダー、ZIP整合性、ゲーム用ZIPの構成を検査。
+- ビルド時にソース指紋・DLLハッシュを生成し、配布時とCIで照合。ソースだけを変更して古いDLLを再配布する操作を拒否。
+
+## 使用した参照DLL
+
+クラウドでの最終ビルドには、ユーザー提供の `rimworld_DLL.zip`（2026-10-21）の参照DLLを使用しました。
+
+| DLL | SHA-256 |
 |---|---|
-| Assembly-CSharp.dll | 0BE7A7EA4B3111D4430F45B36C234A5E43287880B0514B23915F2EF9A0629E16 |
-| UnityStubs.dll | EA962C9274514E0633D4E4C5471A1A98AFF5FC52AF20CA2E506C16DCD8BE6F81 |
-| 0Harmony.dll | C8EF7856B2BE3CF24B345C9B5C2F197F68FCF92649635064FCE7B3CCC8F77CB0 |
+| Assembly-CSharp.dll | `69cf35594dcc55d1d77cae482887e880ec2d7c043e139d54d5c59b2dd2b940d4` |
+| UnityStubs.dll | `207a76f55695d859691aef49818156725e2e6e94937cc6867b2e568b4be77ac6` |
+| Waylith.dll | `30e52fca5f3d62d900fa5a8ac6848bd578dda7b8cdabf4961629b0fa56524b4c` |
+| 0Harmony.dll | `c8ef7856b2be3cf24b345c9b5c2f197f68fcf92649635064fce7b3ccc8f77cb0` |
 
-## 自動検証
-最終実行結果は、このファイルの末尾の「Final run」に記載する。
-基礎テスト、実本体のAPI契約、実DLLに対するHarmony適用・解除、XMLと日英キーの静的検査を含む。
-テストはソースのtests/Program.csとtests/ContractTests.csで再実行できる。
-Harmonyの適用試験は、ゲーム本体を起動したものではなく、独立したテストプロセスで実DLLを読み込んだ試験である。
+ゲーム本体・UnityStubs・Waylith・HarmonyのDLLは公開リポジトリや配布ZIPに含めません。配布DLLはResourceLedgerの2本だけです。
 
-## 原因捕捉の接続点
-- Mineable.TrySpawnYield、CompDeepDrill.TryProducePortion。
-- Toils_Recipeの製造完了、ConsumeIngredients、GenRecipe.MakeRecipeProductsの生成物。
-- QuestManager.Notify_PlantHarvested、CompEggLayer.ProduceEgg、CompHasGatherableBodyResource.Gathered。
-- Thing.Ingested、TendUtility.DoTend、製造作業中のBill_Medical。
-- CompRefuelable.Refuel、Toils_Refuel.FinalizeRefueling。
-- ThingOwnerの具体TryAddとTryTransferToContainer、Frameの失敗・破棄、Building.Destroy。
-- TradeDeal.TryExecute。贈与モードはGiftに分類。
-- QuestPart_DropPodsの配送文脈、DropPodUtilityの配置。
-- 所属ポーンの到着・退出、運搬・収納への出し入れ、CompLaunchable.TryLaunch。
-- Thing.Destroy。スタック合流中の破棄を抑制し、腐敗処理中の消失を区別。
+## 性能測定の範囲
 
-署名とパッチ適用を検証したことは、あらゆるゲーム状況や他MODとの組合せで正しい原因になるという保証ではない。
-未対応の原因は調整差として残り、同量の増加と減少が相殺された場合は内訳を復元できない。
-独自収納や自動工場の対応を実績として記載していない。
+コアだけの20種類・80日・1マップ／1範囲の合成データで、約29,220記録点、6,720明細を処理しました。一例では記録・集約処理が約0.87秒、圧縮後の保存文字列が約1.65MB、複数拠点の結合処理が約13msでした。環境・実行ごとに変動します。
 
-## 保存と負荷
-既定: 時間単位60日、日次600日、詳細7日または20,000件。
-集計ベンチマークは20資源・80日を模擬し、保持後のJSONサイズと処理時間を測定する。
-これは台帳の計算・保持・シリアライズだけを対象とし、実マップの走査やTPS・FPSは測定していない。
-ゲーム内の実際の負荷は「診断」に表示される記録時間と、通常プレイで確認する必要がある。
-診断の操作累計時間は在庫読取部分の時間であり、MOD全体のCPU時間とは異なる。
+ゲーム内の在庫走査・GUI描画・TPS・実セーブ所要時間を測った数値ではありません。
 
-## 実機未検証
-- 実際のゲーム画面とレイアウト、日本語フォント、操作感。
-- バニラ相当の新規コロニーでの作業実行、途中セーブへの追加、削除後ロード。
-- 個別MODとの収納・自動工場・物流・グラヴシップの互換性。
-- 大規模コロニーでのTPS・FPS、実セーブの増加量、長時間プレイ。
+## CIが確認する範囲
 
-上記のため0.1.0は試験版であり、「ゲームへ入れて動作確認済み」とはしていない。
+ゲーム非依存のコアをビルドしてテストし、4件のビルド指紋テスト、翻訳・XML・アイコン、ビルド済みDLLとソースの対応を検査して配布ZIPを作成します。UIを含む全体のコンパイル・ゲームAPI検証は、非公開のゲームDLLを使う上記ビルドで実行しました。
 
-## Final run
+## 実ゲームで未確認の項目
 
+- 0.2.0の描画、UI倍率・画面サイズごとの操作性、他のUI改変MODとの併用。
+- 0.1.0からの実セーブ更新、および更新後に保存・再読込する通常プレイ。
+- 他MOD固有のコンテナ・生産処理・キャラバン等を含む網羅的な原因取得。
+- 全物資の追跡が大規模コロニーのTPS・メモリ・保存時間に与える実測影響。
 
-- Release build: success, 0 warnings / 0 errors.
-- Full suite: 53/53 passed.
-- Capture targets: 41 methods resolved, patched and unpatched in an isolated test CLR.
-- Static artifact check: 8 XML files, 117 matching English/Japanese translation keys, 2 compiled PE assemblies, no implementation stubs.
-
-Core-only benchmark (20 resources, 80 game days, one map scope; excludes game scanning):
-
-```json
-{
-  "scope": "core-only, no game scanning",
-  "resources": 20,
-  "days": 80,
-  "elapsed_ms": 921.5649,
-  "json_bytes": 7697054,
-  "history_points": 29220,
-  "detail_records": 6720,
-  "merge_ms": 9.928,
-  "merged_points": 1461
-}
-```
-
-This JSON size is not a measurement of a live RimWorld save. The default map and storage scopes retain separate histories.
+以上のため、リリースはプレリリースとします。

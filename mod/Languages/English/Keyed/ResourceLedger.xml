@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <LanguageData>
  <RL_Title>Resource Ledger</RL_Title>
  <RL_Resource>Resource</RL_Resource>
@@ -30,7 +30,7 @@
  <RL_DetailLimit>Maximum detail records: {0}</RL_DetailLimit>
  <RL_RecordingHint>Changing retention affects saved history at the next sample. Unknown mod actions remain unclassified. Capture scans occur at completed operations; check diagnostics for cost.</RL_RecordingHint>
  <RL_Recording>Recording settings</RL_Recording>
- <RL_Tracking>Tracked resources</RL_Tracking>
+ <RL_Tracking>Tracked items</RL_Tracking>
  <RL_NewScope>New storage scope</RL_NewScope>
  <RL_Create>Create</RL_Create>
  <RL_Save>Save</RL_Save>
@@ -122,4 +122,22 @@ Detail records: {4}</RL_DiagnosticsText>
  <RL_Cause_Loss>Destruction / loss</RL_Cause_Loss>
  <RL_Cause_Unclassified>Unclassified adjustment</RL_Cause_Unclassified>
  <RL_StorageUnavailable>Could not read {0} storage holders. Recording for affected maps is suspended.</RL_StorageUnavailable>
+ <RL_Stock>Stock</RL_Stock>
+ <RL_Change>Changes</RL_Change>
+ <RL_GroupDays>Buckets: {0} day(s)</RL_GroupDays>
+ <RL_GroupHours>Buckets: {0} hour(s)</RL_GroupHours>
+ <RL_ChartLegend>Bars: stock / solid: in / dashed: out / dotted: net</RL_ChartLegend>
+ <RL_AxisStep>{0}: {1} {2} per tick</RL_AxisStep>
+ <RL_PartialBucket>Partial bucket: quantities are totals for the recorded interval.</RL_PartialBucket>
+ <RL_Visibility_Owned>In stock</RL_Visibility_Owned>
+ <RL_Visibility_Changed>Changed in period</RL_Visibility_Changed>
+ <RL_Visibility_History>All tracked history</RL_Visibility_History>
+ <RL_SearchHint>Search item name or defName. Filtering does not stop recording.</RL_SearchHint>
+ <RL_Refresh>Refresh</RL_Refresh>
+ <RL_LiveStockHint>Current stock is the latest inventory check. The graph uses recorded samples.</RL_LiveStockHint>
+ <RL_AutomaticTracking>Automatically tracking {0} discovered item types, including weapons, apparel and equipped items. History remains at zero stock. Filter the main table to investigate.</RL_AutomaticTracking>
+ <RL_GroupAuto>Buckets: automatic</RL_GroupAuto>
+ <RL_GroupHour>Buckets: hourly</RL_GroupHour>
+ <RL_GroupDay>Buckets: daily</RL_GroupDay>
+ <RL_RecordedRangeOnly>The chart fits the recorded part of the selected period. History before recording started is not invented.</RL_RecordedRangeOnly>
 </LanguageData>

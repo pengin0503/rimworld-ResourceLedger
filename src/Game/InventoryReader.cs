@@ -21,7 +21,8 @@ public sealed class ScopeDefinitionAdapter {public HashSet<string> Groups=new();
 public static class InventoryReader {
  public static string MapId(Map map)=>map.uniqueID.ToString(System.Globalization.CultureInfo.InvariantCulture);
  public static string GroupId(SlotGroup group)=>group.parent is ILoadReferenceable r?r.GetUniqueLoadID():group.GetName();
- public static bool IsTrackable(ThingDef def)=>def.category==ThingCategory.Item&&!def.IsCorpse&&(def.stackLimit>1||def.CountAsResource||def.IsIngestible);
+ public static string ResourceId(Thing thing)=>thing is MinifiedThing minified&&minified.InnerThing!=null?minified.InnerThing.def.defName:thing.def.defName;
+ public static bool IsTrackable(ThingDef def)=>def.category==ThingCategory.Item&&!def.IsCorpse&&(def.thingClass==null||!typeof(UnfinishedThing).IsAssignableFrom(def.thingClass));
  public static InventorySnapshot Read(Map map,ISet<string> resources){
   var watch=System.Diagnostics.Stopwatch.StartNew();
   var snapshot=new InventorySnapshot{Tick=Find.TickManager.TicksGame,Counts=resources.ToDictionary(k=>k,k=>0L)};
@@ -42,9 +43,9 @@ public static class InventoryReader {
    if(thing is Frame)return;
    if(thing is Pawn pawn&&pawn.Faction!=Faction.OfPlayer)return;
    if(thing is Corpse corpse&&corpse.InnerPawn?.Faction!=Faction.OfPlayer)return;
-   if(thing.def.category==ThingCategory.Item&&resources.Contains(thing.def.defName)){
-    var item=new InventoryItem{Thing=thing,Locator=locator,Resource=thing.def.defName,Count=Math.Max(0,thing.stackCount),Group=group,Place=place};
-    snapshot.Items.Add(item);snapshot.Counts[item.Resource]+=item.Count;
+   if(IsTrackable(thing.def)){
+    var item=new InventoryItem{Thing=thing,Locator=locator,Resource=ResourceId(thing),Count=Math.Max(0,thing.stackCount),Group=group,Place=place};
+    snapshot.Items.Add(item);snapshot.Counts[item.Resource]=snapshot.Counts.GetValueOrDefault(item.Resource)+item.Count;
    }
    if(thing is UnfinishedThing unfinished&&unfinished.ingredients!=null)
     foreach(var ingredient in unfinished.ingredients)Walk(ingredient,locator,group,place);

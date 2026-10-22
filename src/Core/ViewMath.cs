@@ -32,7 +32,7 @@ public static class ViewMath {
  public static List<Period> Bars(Series s,long from,long to){
   var result=new List<Period>();
   foreach(var g in s.Periods.Where(p=>p.From>=from&&p.To<=to).GroupBy(p=>(p.To-1)/60000)){
-   var rows=g.OrderBy(p=>p.From).ToList();result.Add(new Period{From=rows[0].From,To=rows[^1].To,Start=rows[0].Start,End=rows[^1].End,In=rows.Sum(p=>p.In),Out=rows.Sum(p=>p.Out),Gap=rows.Any(p=>p.Gap)});
+   var rows=g.OrderBy(p=>p.From).ToList();result.Add(new Period{From=rows[0].From,To=rows[^1].To,Start=rows[0].Start,End=rows[^1].End,In=rows.Sum(p=>p.In),Out=rows.Sum(p=>p.Out),Adjustment=rows.Sum(p=>p.Adjustment),Gap=rows.Any(p=>p.Gap)||rows.Zip(rows.Skip(1),(a,b)=>a.To!=b.From).Any(x=>x)});
   }return result;
  }
 }

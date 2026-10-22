@@ -29,36 +29,40 @@ public sealed class LedgerGameComponent : GameComponent {
   var definition=Data.Scopes.FirstOrDefault(s=>s.Id==scope);
   return snapshot.Project(scope,definition==null?null:new ScopeDefinitionAdapter{Groups=definition.Groups.ToHashSet()});
  }
- public void SeedDefaults(){
-  if(Data.DefaultsSeeded)return;
-  Data.DefaultsSeeded=true;if(Data.Tracked.Count>0)return;
-  foreach(var d in DefDatabase<ThingDef>.AllDefsListForReading.Where(d=>InventoryReader.IsTrackable(d)&&(d.CountAsResource||d.IsMedicine||d.IsNutritionGivingIngestible))){
-   if(d.defName is "WoodLog" or "Steel" or "Plasteel" or "Uranium" or "Gold" or "Silver" or "Jade" or "ComponentIndustrial" or "ComponentSpacer" or "MedicineHerbal" or "MedicineIndustrial" or "MedicineUltratech" or "MealSimple" or "MealFine" or "MealSurvivalPack" or "RawRice" or "RawCorn" or "RawPotatoes")Data.Tracked.Add(d.defName);
-  }
+ public void Discover(InventorySnapshot snapshot){
+  Data.DefaultsSeeded=true;
+  if(Data.Discover(snapshot.Counts.Where(p=>p.Value>0).Select(p=>p.Key)).Count>0){UpdateNames();Revision++;}
  }
  public void UpdateNames(){
   foreach(var id in Data.Tracked){var d=DefDatabase<ThingDef>.GetNamedSilentFail(id);if(d!=null){Data.Names[id]=d.LabelCap;Data.ResourceMods[id]=d.modContentPack?.Name??"Core";Data.NutritionFactors[id]=d.ingestible?.CachedNutrition??0;Data.ValueFactors[id]=d.BaseMarketValue;}}
  }
- public void EnsureBaseline(Map map,InventorySnapshot snapshot){
+ public void EnsureBaseline(Map map,InventorySnapshot snapshot,bool historical=false){
   if(snapshot.UnsupportedHolders>0)return;
   var id=InventoryReader.MapId(map);Data.MapNames[id]=map.Parent?.LabelCap??("Map "+id);
-  foreach(var scope in ScopeIds(map)){
-   var counts=Project(snapshot,scope);
-   var missing=counts.Where(x=>!Data.Series.ContainsKey(Ledger.Key(id,scope,x.Key))).ToDictionary(x=>x.Key,x=>x.Value);
-   if(missing.Count>0)Data.Observe(id,scope,snapshot.Tick,missing);
-  }
+  var resources=Resources;
+  foreach(var scope in ScopeIds(map))Data.EnsureBaseline(id,scope,snapshot.Tick,Project(snapshot,scope),resources,historical);
  }
  public void SampleAll(bool force=false){
   if(ReadOnly||Current.ProgramState!=ProgramState.Playing)return;
   try {
-   SeedDefaults();var tick=Find.TickManager.TicksGame;var settings=LedgerMod.Settings;
+   var tick=Find.TickManager.TicksGame;var settings=LedgerMod.Settings;
    int interval=Math.Clamp(settings.IntervalHours,1,24)*2500;
    if(!force&&LastSampleTick>=0&&tick-LastSampleTick<interval)return;
    UpdateNames();
    var watch=Stopwatch.StartNew();var maps=Maps.ToList();var ids=maps.Select(InventoryReader.MapId).ToHashSet();
    bool changed=membershipKnown&&!ids.SetEquals(previousMaps);
+   var previous=maps.ToDictionary(InventoryReader.MapId,m=>Live.GetValueOrDefault(InventoryReader.MapId(m)));
+   var known=Resources;
    foreach(var map in maps){
-    var id=InventoryReader.MapId(map);var snapshot=InventoryReader.Read(map,Resources);Live[id]=snapshot;if(snapshot.UnsupportedHolders>0)continue;EnsureBaseline(map,snapshot);
+    var snapshot=InventoryReader.Read(map,known);Live[InventoryReader.MapId(map)]=snapshot;
+    if(snapshot.UnsupportedHolders==0)Discover(snapshot);
+   }
+   known=Resources;
+   foreach(var map in maps){
+    var id=InventoryReader.MapId(map);var snapshot=Live[id];if(snapshot.UnsupportedHolders>0)continue;
+    foreach(var resource in known)snapshot.Counts.TryAdd(resource,0);
+    if(previous[id] is {UnsupportedHolders:0} oldSnapshot)EnsureBaseline(map,oldSnapshot,true);
+    EnsureBaseline(map,snapshot);
     foreach(var scope in ScopeIds(map)){
      string topologyKey=id+"|"+scope;string topology=ScopeSignature(map,scope);
      bool scopeChanged=Data.Topology.TryGetValue(topologyKey,out var oldTopology)&&oldTopology!=topology;

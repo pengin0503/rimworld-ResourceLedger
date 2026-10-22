@@ -2,5 +2,5 @@
 <Defs>
  <KeyBindingCategoryDef><defName>ResourceLedger</defName><label>Resource Ledger</label></KeyBindingCategoryDef>
  <KeyBindingDef><defName>ResourceLedger_Open</defName><label>Open Resource Ledger</label><category>ResourceLedger</category><defaultKeyCodeA>None</defaultKeyCodeA></KeyBindingDef>
- <MainButtonDef><defName>ResourceLedger</defName><label>Ledger</label><description>View resource history, exact deltas and cause breakdowns.</description><tabWindowClass>ResourceLedger.UI.LedgerWindow</tabWindowClass><order>95</order><validWithoutMap>false</validWithoutMap></MainButtonDef>
+ <MainButtonDef><defName>ResourceLedger</defName><label>Ledger</label><description>View resource history, exact deltas and cause breakdowns.</description><tabWindowClass>ResourceLedger.UI.LedgerWindow</tabWindowClass><iconPath>UI/Buttons/ResourceLedger</iconPath><minimized>true</minimized><order>95</order><validWithoutMap>false</validWithoutMap></MainButtonDef>
 </Defs>

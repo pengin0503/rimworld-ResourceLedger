@@ -6,6 +6,7 @@ namespace ResourceLedger.Game;
 public sealed class LedgerSettings : ModSettings {
  public int IntervalHours=1,HourlyDays=60,DailyDays=600,DetailDays=7,DetailLimit=20000;
  public bool CaptureCauses=true,CaptureTransfers=true;
+ public int Visibility,GroupHours;public bool ShowIncrease=true,ShowDecrease=true,ShowNet;
  public string SortColumn="Name",DisplayUnit="count";public bool SortDescending,FavoritesOnly;
  public List<string> HiddenColumns=new(){"Start","End","Percent"};
  public override void ExposeData(){
@@ -13,6 +14,8 @@ public sealed class LedgerSettings : ModSettings {
   Scribe_Values.Look(ref DetailDays,"detailDays",7);Scribe_Values.Look(ref DetailLimit,"detailLimit",20000);
   Scribe_Values.Look(ref CaptureCauses,"captureCauses",true);Scribe_Values.Look(ref CaptureTransfers,"captureTransfers",true);
   Scribe_Values.Look(ref SortColumn,"sortColumn","Name");Scribe_Values.Look(ref DisplayUnit,"displayUnit","count");Scribe_Values.Look(ref SortDescending,"sortDescending",false);Scribe_Values.Look(ref FavoritesOnly,"favoritesOnly",false);
+  Scribe_Values.Look(ref Visibility,"visibility",0);Scribe_Values.Look(ref GroupHours,"groupHours",0);
+  Scribe_Values.Look(ref ShowIncrease,"showIncrease",true);Scribe_Values.Look(ref ShowDecrease,"showDecrease",true);Scribe_Values.Look(ref ShowNet,"showNet",false);
   Scribe_Collections.Look(ref HiddenColumns,"hiddenColumns",LookMode.Value);HiddenColumns??=new(){"Start","End","Percent"};
  }
 }

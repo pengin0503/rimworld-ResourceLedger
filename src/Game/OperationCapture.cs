@@ -19,13 +19,16 @@ public sealed class OperationCapture : IDisposable {
  private OperationCapture(LedgerGameComponent c,Map m,Cause pos,Cause neg,Pawn? p,Thing? building){
   component=c;map=m;positive=pos;negative=neg;actor=p?.LabelShort??"";facility=building?.LabelCap??"";
   actorId=p?.ThingID??"";facilityId=building?.ThingID??"";
-  before=InventoryReader.Read(m,c.Resources);c.EnsureBaseline(m,before);
+  before=InventoryReader.Read(m,c.Resources);
   if(before.UnsupportedHolders>0)throw new InvalidOperationException("A storage holder could not be read; capture omitted.");
+  c.Discover(before);
+  if(c.Live.GetValueOrDefault(InventoryReader.MapId(m)) is {UnsupportedHolders:0} prior)c.EnsureBaseline(m,prior,true);
+  c.EnsureBaseline(m,before);
   scopeBefore=c.ScopeIds(m).ToDictionary(s=>s,s=>c.Project(before,s));
  }
  public static OperationCapture? Begin(Map? map,Cause positive,Cause negative,Pawn? actor=null,Thing? facility=null,bool movement=false){
   if(Current!=null||MergeDepth>0||map==null||!map.IsPlayerHome||CurrentProgramNotPlaying()||!LedgerMod.Settings.CaptureCauses||(movement&&!LedgerMod.Settings.CaptureTransfers))return null;
-  try{var c=LedgerGameComponent.Instance;if(c==null||c.ReadOnly||c.Data.Tracked.Count==0)return null;return Current=new OperationCapture(c,map,positive,negative,actor,facility);}
+  try{var c=LedgerGameComponent.Instance;if(c==null||c.ReadOnly)return null;return Current=new OperationCapture(c,map,positive,negative,actor,facility);}
   catch(Exception ex){LedgerGameComponent.Report(ex);return null;}
  }
  private static bool CurrentProgramNotPlaying()=>Verse.Current.ProgramState!=ProgramState.Playing;
@@ -34,6 +37,7 @@ public sealed class OperationCapture : IDisposable {
   try{
    var after=InventoryReader.Read(map,component.Resources);
    if(after.UnsupportedHolders>0)throw new InvalidOperationException("A storage holder could not be read; capture omitted.");
+   component.Discover(after);component.EnsureBaseline(map,before);
    var mapId=InventoryReader.MapId(map);var tick=Find.TickManager.TicksGame;
    foreach(var (scope,counts) in scopeBefore){
     var consumed=scope=="map"?Consumed:new Dictionary<string,long>();

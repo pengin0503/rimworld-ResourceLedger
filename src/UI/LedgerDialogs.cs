@@ -31,13 +31,11 @@ public static class LedgerDialogs {
   public override Vector2 InitialSize=>new(760,700);
   public TrackingWindow(LedgerGameComponent c){component=c;doCloseButton=true;doCloseX=true;forcePause=true;optionalTitle=TextCatalog.Get("Tracking");}
   public override void DoWindowContents(Rect rect){
-   search=Widgets.TextField(new Rect(0,34,rect.width,30),search);
-   var defs=DefDatabase<ThingDef>.AllDefsListForReading.Where(d=>InventoryReader.IsTrackable(d)&&(d.LabelCap.ToString().Contains(search,StringComparison.CurrentCultureIgnoreCase)||d.defName.Contains(search,StringComparison.OrdinalIgnoreCase))).OrderBy(d=>d.label).ToList();
-   var viewport=new Rect(0,75,rect.width,rect.height-140);Widgets.BeginScrollView(viewport,ref scroll,new Rect(0,0,viewport.width-20,defs.Count*32));
-   for(int i=Math.Max(0,(int)(scroll.y/32)-1);i<Math.Min(defs.Count,(int)((scroll.y+viewport.height)/32)+2);i++){var d=defs[i];bool enabled=component.Data.Tracked.Contains(d.defName),old=enabled;
-    Widgets.CheckboxLabeled(new Rect(4,i*32,viewport.width-35,29),d.LabelCap+" ["+(d.modContentPack?.Name??"Core")+"]",ref enabled);
-    if(enabled!=old){if(enabled){component.Data.Tracked.Add(d.defName);component.Data.Names[d.defName]=d.LabelCap;}else component.Data.Tracked.Remove(d.defName);component.Revision++;}
-   }Widgets.EndScrollView();
+   Widgets.Label(new Rect(0,34,rect.width,58),TextCatalog.Get("AutomaticTracking",component.Data.Tracked.Count));
+   search=Widgets.TextField(new Rect(0,98,rect.width,30),search);
+   var defs=component.Data.Tracked.Select(id=>DefDatabase<ThingDef>.GetNamedSilentFail(id)).Where(d=>d!=null&&(d.LabelCap.ToString().Contains(search,StringComparison.CurrentCultureIgnoreCase)||d.defName.Contains(search,StringComparison.OrdinalIgnoreCase))).OrderBy(d=>d.label).ToList();
+   var viewport=new Rect(0,138,rect.width,rect.height-198);Widgets.BeginScrollView(viewport,ref scroll,new Rect(0,0,viewport.width-20,defs.Count*32));
+   for(int i=Math.Max(0,(int)(scroll.y/32)-1);i<Math.Min(defs.Count,(int)((scroll.y+viewport.height)/32)+2);i++){var d=defs[i];Widgets.ThingIcon(new Rect(4,i*32,28,28),d);Widgets.LabelEllipses(new Rect(40,i*32,viewport.width-75,29),d.LabelCap+" ["+(d.modContentPack?.Name??"Core")+"]");}Widgets.EndScrollView();
   }
   public override void PostClose(){base.PostClose();component.SampleAll(true);}
  }

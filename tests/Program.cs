@@ -56,9 +56,12 @@ Test("Restored pending event is included in committed details",()=>{var l=Seed()
 Test("Random mixed known and unknown operations conserve stock",()=>{var random=new Random(42);var l=Seed(0,10000);long count=10000;for(int i=1;i<=1200;i++){int inc=random.Next(0,40),dec=random.Next(0,40);if(i%4!=0){Event(l,i*2500-1,inc,Cause.Mining);Event(l,i*2500-1,-dec,Cause.Food);}count+=inc-dec;Observe(l,i*2500,count);var s=Sum(l,0,i*2500);Eq(s.Net,s.Increase-s.Decrease);if(i%100==0){Yes(LedgerSerializer.TryLoad(LedgerSerializer.Save(l),out var restored));l=restored!;l.Trim(i*2500,new Retention{DetailLimit=10});}}});
 Test("Delayed composition gaps also break graph lines",()=>{var l=Seed();Observe(l,0,0,true);Observe(l,2500,0);Yes(ViewMath.Points(l.Series.Values.Single(),0,2500,1,false)[1].Gap);});
 Test("Merge keeps gross flows across different sampling intervals",()=>{var a=Seed();Event(a,1,1,Cause.Mining);Observe(a,2500,101);Event(a,2501,1,Cause.Mining);Observe(a,5000,102);var b=Seed();Event(b,1,5,Cause.Mining);Observe(b,5000,105);var s=Queries.Summarize(ViewMath.Merge(new[]{a.Series.Values.Single(),b.Series.Values.Single()}),0,5000);Eq(7L,s.Increase);Eq(7L,s.Net);Yes(s.Continuous);});
+Test("Daily chart marks an unrecorded interval as a gap",()=>{var s=new Series{Periods=new(){new Period{From=0,To=2500,Start=100,End=110,In=10},new Period{From=5000,To=7500,Start=110,End=120,In=10}}};Yes(ViewMath.Bars(s,0,7500).Single().Gap);});
+Test("Daily chart preserves unexplained adjustments",()=>{var s=new Series{Periods=new(){new Period{From=0,To=2500,Start=100,End=110,In=10,Adjustment=10}}};Eq(10L,ViewMath.Bars(s,0,2500).Single().Adjustment);});
+FeatureTests.Register(Test);
 if(args.Contains("--contracts"))ContractTests.Register(Test);
 int failed=0;
-foreach(var test in tests){try{test.Item2();Console.WriteLine("PASS "+test.Item1);}catch(Exception e){failed++;Console.WriteLine("FAIL "+test.Item1+": "+e.Message);}}
+foreach(var test in tests){try{test.Item2();Console.WriteLine("PASS "+test.Item1);}catch(Exception e){failed++;Console.WriteLine("FAIL "+test.Item1+": "+e.GetBaseException());}}
 Console.WriteLine($"{tests.Count-failed}/{tests.Count} passed");
 if(failed==0&&args.Contains("--benchmark")){
  var b=new Ledger();var resources=Enumerable.Range(0,20).Select(i=>"Resource"+i).ToArray();var counts=resources.ToDictionary(k=>k,k=>100000L);b.Observe("m","map",0,counts);
@@ -68,7 +71,7 @@ if(failed==0&&args.Contains("--benchmark")){
   b.Observe("m","map",hour*2500,counts);if(hour%24==0)b.Trim(hour*2500,new Retention());
  }
  sw.Stop();var payload=LedgerSerializer.Save(b);var single=b.Series.Values.First();var mergeWatch=System.Diagnostics.Stopwatch.StartNew();var combined=ViewMath.Merge(new[]{single,single});mergeWatch.Stop();
- Console.WriteLine("BENCHMARK "+System.Text.Json.JsonSerializer.Serialize(new{scope="core-only, no game scanning",resources=20,days=80,elapsed_ms=sw.Elapsed.TotalMilliseconds,json_bytes=System.Text.Encoding.UTF8.GetByteCount(payload),history_points=b.Series.Values.Sum(s=>s.Samples.Count),detail_records=b.Events.Count,merge_ms=mergeWatch.Elapsed.TotalMilliseconds,merged_points=combined.Samples.Count}));
+ Console.WriteLine("BENCHMARK "+System.Text.Json.JsonSerializer.Serialize(new{scope="core-only, no game scanning",resources=20,days=80,elapsed_ms=sw.Elapsed.TotalMilliseconds,save_bytes=System.Text.Encoding.UTF8.GetByteCount(payload),history_points=b.Series.Values.Sum(s=>s.Samples.Count),detail_records=b.Events.Count,merge_ms=mergeWatch.Elapsed.TotalMilliseconds,merged_points=combined.Samples.Count}));
 }
 return failed==0?0:1;
 

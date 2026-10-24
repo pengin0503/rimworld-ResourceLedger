@@ -16,7 +16,8 @@ public static class LedgerGraph {
   if(recorded.Count>1){long first=recorded.Min(p=>p.Tick),last=recorded.Max(p=>p.Tick);if(last>first){limited=first>from||last<to;from=first;to=last;}}
   long interval=requestedInterval<=0?(to-from<=120000?2500:60000):Math.Max(2500,requestedInterval);
   interval=Math.Max(interval,(long)Math.Ceiling((to-from)/(240d*interval))*interval);
-  interval=Math.Max(interval,sources.SelectMany(s=>s.Series.Periods).Where(p=>p.From>=from&&p.To<=to).Select(p=>p.To-p.From).DefaultIfEmpty(interval).Max());
+  // Unchanged periods can be split exactly, so only periods with flows limit how fine the buckets can be.
+  interval=Math.Max(interval,sources.SelectMany(s=>s.Series.Periods).Where(p=>!p.Flat&&p.From>=from&&p.To<=to).Select(p=>p.To-p.From).DefaultIfEmpty(interval).Max());
   string key=cacheToken+"|"+from+"|"+to+"|"+interval;
   if(key!=cachedKey){cached=sources.Select(s=>ChartMath.Buckets(s.Series,from,to,interval)).ToList();cachedKey=key;}
   var plot=new Rect(rect.x+90,rect.y+51,Math.Max(1,rect.width-195),Math.Max(1,rect.height-89));

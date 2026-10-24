@@ -60,6 +60,7 @@ Test("Daily chart marks an unrecorded interval as a gap",()=>{var s=new Series{P
 Test("Daily chart preserves unexplained adjustments",()=>{var s=new Series{Periods=new(){new Period{From=0,To=2500,Start=100,End=110,In=10,Adjustment=10}}};Eq(10L,ViewMath.Bars(s,0,2500).Single().Adjustment);});
 FeatureTests.Register(Test);
 ReviewTests.Register(Test);
+ScaleTests.Register(Test);
 if(args.Contains("--contracts"))ContractTests.Register(Test);
 int failed=0;
 foreach(var test in tests){try{test.Item2();Console.WriteLine("PASS "+test.Item1);}catch(Exception e){failed++;Console.WriteLine("FAIL "+test.Item1+": "+e.GetBaseException());}}
@@ -73,6 +74,17 @@ if(failed==0&&args.Contains("--benchmark")){
  }
  sw.Stop();var payload=LedgerSerializer.Save(b);var single=b.Series.Values.First();var mergeWatch=System.Diagnostics.Stopwatch.StartNew();var combined=ViewMath.Merge(new[]{single,single});mergeWatch.Stop();
  Console.WriteLine("BENCHMARK "+System.Text.Json.JsonSerializer.Serialize(new{scope="core-only, no game scanning",resources=20,days=80,elapsed_ms=sw.Elapsed.TotalMilliseconds,save_bytes=System.Text.Encoding.UTF8.GetByteCount(payload),history_points=b.Series.Values.Sum(s=>s.Samples.Count),detail_records=b.Events.Count,merge_ms=mergeWatch.Elapsed.TotalMilliseconds,merged_points=combined.Samples.Count}));
+}
+if(failed==0&&args.Contains("--benchmark")){
+ // Scale of automatic tracking (#8/#9): 300 types in map+stored scopes, 10% changing, hourly samples with retention each sample.
+ var l=new Ledger();var counts=Enumerable.Range(0,300).ToDictionary(i=>"R"+i,i=>1L);var random=new Random(1);double maxTrim=0;
+ for(int hour=0;hour<=100*24;hour++){
+  foreach(var k in counts.Keys.Take(30).ToList())counts[k]=Math.Max(0,counts[k]+random.Next(-1,2));
+  l.Observe("m","map",hour*2500L,counts);l.Observe("m","stored",hour*2500L,counts);
+  var sw=System.Diagnostics.Stopwatch.StartNew();l.Trim(hour*2500L,new Retention());sw.Stop();if(hour>24)maxTrim=Math.Max(maxTrim,sw.Elapsed.TotalMilliseconds);
+ }
+ var payload=LedgerSerializer.Save(l);
+ Console.WriteLine("BENCHMARK "+System.Text.Json.JsonSerializer.Serialize(new{scope="automatic tracking scale, core only",resources=300,scopes=2,changing_share=0.1,days=100,max_trim_ms=maxTrim,save_bytes=System.Text.Encoding.UTF8.GetByteCount(payload),history_periods=l.Series.Values.Sum(s=>s.Periods.Count)}));
 }
 return failed==0?0:1;
 

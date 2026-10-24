@@ -19,7 +19,7 @@ public static class ChartMath {
  }
  public static List<ChartBucket> Buckets(Series series,long from,long to,long interval){
   interval=Math.Max(1,interval);var result=new List<ChartBucket>();
-  foreach(var group in series.Periods.Where(p=>p.From>=from&&p.To<=to&&p.To>p.From).GroupBy(p=>(p.To-1)/interval).OrderBy(g=>g.Key)){
+  foreach(var group in PeriodMath.SplitFlat(series.Periods,interval,from,to).GroupBy(p=>(p.To-1)/interval).OrderBy(g=>g.Key)){
    var rows=group.OrderBy(p=>p.From).ToList();var first=rows[0];var last=rows[^1];
    bool gap=rows.Any(p=>p.Gap)||rows.Zip(rows.Skip(1),(a,b)=>a.To!=b.From).Any(x=>x);
    bool partial=first.From!=group.Key*interval||last.To!=(group.Key+1)*interval;
@@ -38,4 +38,25 @@ public static class ResourceSelection {
   ResourceVisibility.Changed=>summary.Continuous&&(summary.Increase>0||summary.Decrease>0),
   _=>true
  };
+}
+
+public static class PeriodMath {
+ /// <summary>
+ /// The periods inside [from, to] for grouping by <paramref name="interval"/>. Unchanged (flat) periods are cut at the
+ /// range ends and interval boundaries, which is exact because their stock is the same at every tick; other periods are
+ /// kept whole and only included when they lie entirely inside the range.
+ /// </summary>
+ public static IEnumerable<Period> SplitFlat(IEnumerable<Period> periods,long interval,long from=long.MinValue,long to=long.MaxValue){
+  interval=Math.Max(1,interval);
+  foreach(var p in periods){
+   if(p.To<=p.From)continue;
+   if(!p.Flat){if(p.From>=from&&p.To<=to)yield return p;continue;}
+   long a=Math.Max(p.From,from),end=Math.Min(p.To,to);
+   while(a<end){
+    long next=Math.Min(end,(a/interval+1)*interval);
+    yield return a==p.From&&next==p.To?p:new Period{From=a,To=next,Start=p.Start,End=p.End,Daily=p.Daily};
+    a=next;
+   }
+  }
+ }
 }

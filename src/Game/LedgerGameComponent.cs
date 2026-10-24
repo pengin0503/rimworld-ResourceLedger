@@ -23,7 +23,18 @@ public sealed class LedgerGameComponent : GameComponent {
  public static LedgerGameComponent? Instance=>Current.Game?.GetComponent<LedgerGameComponent>();
  public LedgerGameComponent(Verse.Game game){}
  public IEnumerable<Map> Maps=>Find.Maps.Where(m=>m.IsPlayerHome);
- public HashSet<string> Resources=>Data.Tracked.Where(id=>DefDatabase<ThingDef>.GetNamedSilentFail(id)!=null).ToHashSet(StringComparer.Ordinal);
+ private HashSet<string>? resources;private Ledger? resourcesData;private int resourcesCount=-1;
+ /// <summary>Tracked types with a loaded definition. Cached: tracking only ever grows, and a load replaces <see cref="Data"/>.</summary>
+ public HashSet<string> Resources{get{
+  if(resources==null||!ReferenceEquals(resourcesData,Data)||resourcesCount!=Data.Tracked.Count){
+   resources=Data.Tracked.Where(id=>DefDatabase<ThingDef>.GetNamedSilentFail(id)!=null).ToHashSet(StringComparer.Ordinal);resourcesData=Data;resourcesCount=Data.Tracked.Count;
+  }
+  return resources;
+ }}
+ /// <summary>Changes when a capture updated the live stock; summaries only change with <see cref="Revision"/>.</summary>
+ public int LiveRevision;
+ /// <summary>Size of the ledger string written by the last save or read by the last load; -1 before either.</summary>
+ public int LastPayloadLength=-1;
  public IEnumerable<string> ScopeIds(Map map)=>new[]{"map","stored"}.Concat(Data.Scopes.Where(s=>s.Map==InventoryReader.MapId(map)).Select(s=>s.Id));
  public Dictionary<string,long> Project(InventorySnapshot snapshot,string scope){
   var definition=Data.Scopes.FirstOrDefault(s=>s.Id==scope);
@@ -93,17 +104,28 @@ public sealed class LedgerGameComponent : GameComponent {
   }
  }
  public override void ExposeData(){
-  if(Scribe.mode==LoadSaveMode.Saving){SampleAll(true);payload=ReadOnly?PreservedPayload??payload:LedgerSerializer.Save(Data);}
+  if(Scribe.mode==LoadSaveMode.Saving){SampleAll(true);payload=ReadOnly?PreservedPayload??payload:LedgerSerializer.Save(Data);LastPayloadLength=payload.Length;}
   Scribe_Values.Look(ref payload,"resourceLedgerJson","");
   if(Scribe.mode==LoadSaveMode.LoadingVars&&payload.Length>0){
+   LastPayloadLength=payload.Length;
    if(LedgerSerializer.TryLoad(payload,out var loaded)){Data=loaded!;LastSampleTick=Data.Series.Values.SelectMany(s=>s.Samples).Select(s=>s.Tick).DefaultIfEmpty(-1).Max();previousMaps=Data.ActiveMaps.ToHashSet();membershipKnown=previousMaps.Count>0;}
    else{ReadOnly=true;PreservedPayload=payload;Error="UnsupportedSave";}
   }
  }
+ /// <summary>Alert rules with this map apply to the sum of all player home maps.</summary>
+ public const string AllMaps="all";
  public void EvaluateAlerts(long tick){
+  var homes=Maps.Select(InventoryReader.MapId).ToList();
+  // Rules for maps that no longer exist can never fire again.
+  var existing=Find.Maps.Select(InventoryReader.MapId).ToHashSet();
+  Data.Alerts.RemoveAll(rule=>rule.Map!=AllMaps&&!existing.Contains(rule.Map));
   foreach(var rule in Data.Alerts){
-   if(DefDatabase<ThingDef>.GetNamedSilentFail(rule.Resource)==null||!Maps.Any(m=>InventoryReader.MapId(m)==rule.Map)||Live.GetValueOrDefault(rule.Map)?.UnsupportedHolders>0)continue;
-   if(!Data.Series.TryGetValue(Ledger.Key(rule.Map,rule.Scope,rule.Resource),out var series))continue;
+   if(DefDatabase<ThingDef>.GetNamedSilentFail(rule.Resource)==null)continue;
+   var maps=rule.Map==AllMaps?homes:homes.Where(m=>m==rule.Map).ToList();
+   if(maps.Count==0||maps.Any(m=>Live.GetValueOrDefault(m)?.UnsupportedHolders>0))continue;
+   var sources=maps.Select(m=>Data.Series.GetValueOrDefault(Ledger.Key(m,rule.Scope,rule.Resource))).ToList();
+   if(sources.Any(s=>s==null))continue;
+   var series=ViewMath.Merge(sources.Select(s=>s!));
    var summary=Queries.Summarize(series,Math.Max(0,tick-5*60000),tick);
    if(AlertEvaluator.Evaluate(rule,summary,Queries.Forecast(series,tick,5),tick))
     Messages.Message(TextCatalog.Get("AlertMessage",Data.Names.GetValueOrDefault(rule.Resource,rule.Resource),TextCatalog.Get("Alert_"+rule.Kind),rule.Threshold,summary.End),MessageTypeDefOf.CautionInput,false);
@@ -111,7 +133,8 @@ public sealed class LedgerGameComponent : GameComponent {
  }
  public void Record(string map,string scope,string resource,long tick,long delta,Cause cause,string actor,string facility,string id,string actorId="",string facilityId=""){
   if(ReadOnly||!Data.Tracked.Contains(resource))return;
-  Data.Record(new LedgerEvent{Map=map,Scope=scope,Resource=resource,Tick=tick,Delta=delta,Cause=cause,Actor=actor,Facility=facility,Id=id,ActorId=actorId,FacilityId=facilityId});Revision++;
+  // Pending events only reach summaries at the next sample, which bumps Revision itself.
+  Data.Record(new LedgerEvent{Map=map,Scope=scope,Resource=resource,Tick=tick,Delta=delta,Cause=cause,Actor=actor,Facility=facility,Id=id,ActorId=actorId,FacilityId=facilityId});
  }
  private string ScopeSignature(Map map,string scope){
   if(scope=="map")return "map";

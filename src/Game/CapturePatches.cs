@@ -68,6 +68,10 @@ public static class CapturePatches {
      case "Harvest":harmony.Patch(target.Method,postfix:new HarmonyMethod(typeof(CapturePatches),nameof(HarvestPostfix)));break;
      case "Merge":harmony.Patch(target.Method,prefix:new HarmonyMethod(typeof(CapturePatches),nameof(MergePrefix)),finalizer:new HarmonyMethod(typeof(CapturePatches),nameof(MergeFinally)));break;
      case "Rot":harmony.Patch(target.Method,prefix:new HarmonyMethod(typeof(CapturePatches),nameof(RotPrefix)),finalizer:new HarmonyMethod(typeof(CapturePatches),nameof(RotFinally)));break;
+     // These two run for nearly every container add and every destroyed thing: dedicated prefixes leave at once
+     // without the per-call argument array and LINQ of the general prefix.
+     case "Frame":harmony.Patch(target.Method,prefix:new HarmonyMethod(typeof(CapturePatches),nameof(FramePrefix)),finalizer:new HarmonyMethod(typeof(CapturePatches),nameof(Finally)));break;
+     case "Loss":harmony.Patch(target.Method,prefix:new HarmonyMethod(typeof(CapturePatches),nameof(LossPrefix)),finalizer:new HarmonyMethod(typeof(CapturePatches),nameof(Finally)));break;
      default:harmony.Patch(target.Method,prefix:new HarmonyMethod(typeof(CapturePatches),nameof(Prefix)),finalizer:new HarmonyMethod(typeof(CapturePatches),nameof(Finally)));break;
     }
     Installed.Add(target.Method.DeclaringType!.FullName+"."+target.Method.Name+" ["+target.Kind+"]");
@@ -81,16 +85,11 @@ public static class CapturePatches {
    var descriptor=descriptors[__originalMethod];var pos=descriptor.Positive;var neg=descriptor.Negative;
    var actor=__args.OfType<Pawn>().FirstOrDefault()??(__instance as Pawn);
    var map=__args.OfType<Map>().FirstOrDefault()??MapOf(__instance)??actor?.MapHeld;
-   if(descriptor.Kind=="Frame"&&(__instance as ThingOwner)?.Owner is not Frame)return;
    if(descriptor.Kind=="FrameTransfer"){if(__args.OfType<ThingOwner>().FirstOrDefault()?.Owner is not Frame)return;OperationCapture.PromoteConstruction();}
    if(descriptor.Kind=="Arrival"&&(__args.OfType<bool>().FirstOrDefault()||actor?.Faction!=Faction.OfPlayer))return;
    if(__instance is TradeDeal){actor=TradeSession.playerNegotiator;map=actor?.Map;if(TradeSession.giftMode)pos=neg=Cause.Gift;}
    if(__originalMethod.DeclaringType==typeof(DropPodUtility)&&questDeliveryDepth>0){pos=Cause.Reward;foreach(var list in __args.OfType<List<Thing>>())foreach(var item in list)Tag(item,Cause.Reward,null);}
    if(__instance is Thing food&&__originalMethod.Name=="Ingested"&&food.def.IsDrug)neg=Cause.Drug;
-   if(descriptor.Kind=="Loss"){
-    if(__instance is not Thing item||item.def.category!=ThingCategory.Item)return;
-    var mode=__args.OfType<DestroyMode>().FirstOrDefault();neg=OperationCapture.RotDepth>0?Cause.Rot:mode is DestroyMode.KillFinalize or DestroyMode.KillFinalizeLeavingsOnly?Cause.Loss:Cause.Unclassified;
-   }
    if(descriptor.Kind=="Placement"){
     var thing=__args.OfType<Thing>().FirstOrDefault();if(thing==null||!products.TryGetValue(thing,out var tag))return;pos=tag.Cause;actor=tag.Actor;
    }
@@ -98,6 +97,19 @@ public static class CapturePatches {
   }catch(Exception e){LedgerGameComponent.Report(e);}
  }
  public static Exception? Finally(Exception? __exception,OperationCapture? __state){__state?.Dispose();return __exception;}
+ public static void FramePrefix(ThingOwner __instance,out OperationCapture? __state){
+  __state=null;
+  if(OperationCapture.Current!=null||__instance.Owner is not Frame)return;
+  try{__state=OperationCapture.Begin(MapOf(__instance),Cause.Recovery,Cause.Construction);}catch(Exception e){LedgerGameComponent.Report(e);}
+ }
+ public static void LossPrefix(Thing __instance,DestroyMode mode,out OperationCapture? __state){
+  __state=null;
+  if(OperationCapture.Current!=null||OperationCapture.MergeDepth>0||__instance.def.category!=ThingCategory.Item)return;
+  try{
+   var neg=OperationCapture.RotDepth>0?Cause.Rot:mode is DestroyMode.KillFinalize or DestroyMode.KillFinalizeLeavingsOnly?Cause.Loss:Cause.Unclassified;
+   __state=OperationCapture.Begin(__instance.MapHeld,Cause.Unclassified,neg);
+  }catch(Exception e){LedgerGameComponent.Report(e);}
+ }
  private sealed class RecipeAction {
   public Toil Toil=null!;public Action Original=null!;
   public Cause Positive=Cause.Production,Negative=Cause.RecipeMaterial;

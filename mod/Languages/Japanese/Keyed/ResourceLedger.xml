@@ -42,7 +42,7 @@
  <RL_Hysteresis>解除条件の余裕幅</RL_Hysteresis>
  <RL_Cooldown>再通知間隔：{0}日</RL_Cooldown>
  <RL_DeleteRule>この条件を削除</RL_DeleteRule>
- <RL_AlertHint>条件はこの資源・拠点・集計範囲に適用します。減少量・予測の評価には直近5日分を使います。通知の数量はグラフの表示単位にかかわらず個数です。</RL_AlertHint>
+ <RL_AlertHint>条件はこの資源・拠点・集計範囲に適用します。全拠点を選んでいる場合は、すべての本拠地の合計で判定します。減少量・予測の評価には直近5日分を使います。通知の数量はグラフの表示単位にかかわらず個数です。</RL_AlertHint>
  <RL_InvalidNumber>0以上の有効な数値を入力してください。</RL_InvalidNumber>
  <RL_Alert_Below>在庫が下限未満</RL_Alert_Below>
  <RL_Alert_Above>在庫が上限超過</RL_Alert_Above>
@@ -53,6 +53,7 @@
  <RL_Other>その他</RL_Other>
  <RL_NoColony>プレイヤーの拠点を開くと資源情報を確認できます。</RL_NoColony>
  <RL_UnsupportedSave>このセーブの資源台帳データは未対応の版、または読み取れない状態です。元データを保持し、記録を停止しています。</RL_UnsupportedSave>
+ <RL_StorageScale>現在の記録量：追跡{0}種類、系列{1}、履歴区間{2}、行動明細{3}件。前回のセーブ／読み込み時の台帳サイズ：{4} KB。</RL_StorageScale>
  <RL_AllMaps>現在の全拠点</RL_AllMaps>
  <RL_ScopeMap>マップ全体＋所属ポーンの携帯品</RL_ScopeMap>
  <RL_ScopeStored>保管場所内のみ</RL_ScopeStored>

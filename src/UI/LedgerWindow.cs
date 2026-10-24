@@ -37,14 +37,29 @@ public sealed class LedgerWindow : MainTabWindow {
   return unit=="nutrition"?d?.ingestible?.CachedNutrition??C?.Data.NutritionFactors.GetValueOrDefault(id)??0:unit=="value"?d?.BaseMarketValue??C?.Data.ValueFactors.GetValueOrDefault(id)??0:1;
  }
  private string UnitLabel=>T(unit=="nutrition"?"Nutrition":unit=="value"?"MarketValue":"Count");
+ private Dictionary<(string Resource,string Scope),List<Series>> seriesIndex=new();private int indexedRevision=-1,indexedCount=-1;
  private List<Series> Sources(string id){
   if(C==null)return new();
+  // Series are only added, never removed, so the revision and count tell when the index is stale.
+  if(indexedRevision!=C.Revision||indexedCount!=C.Data.Series.Count){
+   seriesIndex=C.Data.Series.Values.GroupBy(s=>(s.Resource,s.Scope)).ToDictionary(g=>g.Key,g=>g.ToList());indexedRevision=C.Revision;indexedCount=C.Data.Series.Count;
+  }
+  if(!seriesIndex.TryGetValue((id,scope),out var all))return new();
   var active=C.Maps.Select(InventoryReader.MapId).ToHashSet();
-  return C.Data.Series.Values.Where(s=>s.Resource==id&&s.Scope==scope&&(mapChoice=="all"?active.Contains(s.Map):s.Map==mapChoice)).ToList();
+  return all.Where(s=>mapChoice=="all"?active.Contains(s.Map):s.Map==mapChoice).ToList();
+ }
+ private int liveSeen=-1;private float liveSeenAt=-10f;
+ /// <summary>
+ /// Captured operations update the live stock many times a second while the game runs; the table follows them at most
+ /// once per real second instead of recomputing every row on each one.
+ /// </summary>
+ private int LiveStamp(LedgerGameComponent c){
+  if(c.LiveRevision!=liveSeen&&Time.realtimeSinceStartup-liveSeenAt>=1f){liveSeen=c.LiveRevision;liveSeenAt=Time.realtimeSinceStartup;}
+  return liveSeen;
  }
  private List<RowData> Rows(){
   var c=C!;var range=Range();
-  string key=c.Revision+"|"+mapChoice+"|"+scope+"|"+search+"|"+modFilter+"|"+category+"|"+favoritesOnly+"|"+sort+"|"+descending+"|"+range.From+"|"+range.To+"|"+visibility+"|"+selected+"|"+unit;
+  string key=c.Revision+"|"+LiveStamp(c)+"|"+mapChoice+"|"+scope+"|"+search+"|"+modFilter+"|"+category+"|"+favoritesOnly+"|"+sort+"|"+descending+"|"+range.From+"|"+range.To+"|"+visibility+"|"+selected+"|"+unit;
   // Time only changes with simulation; all GUI events in a paused frame reuse this result.
   if(key==cacheKey)return cached;cacheKey=key;
   var rows=new List<RowData>();
@@ -174,7 +189,7 @@ public sealed class LedgerWindow : MainTabWindow {
   var range=Range();var sum=row.Summary;float y=rect.y;
   var def=DefDatabase<ThingDef>.GetNamedSilentFail(selected);if(def!=null)Widgets.ThingIcon(new Rect(0,y,30,30),def);
   Text.Font=GameFont.Medium;Widgets.Label(new Rect(38,y,rect.width-220,30),row.Name+" · "+UnitLabel);Text.Font=GameFont.Small;
-  if(Widgets.ButtonText(new Rect(rect.width-170,y,170,30),T("Alerts"))){var map=mapChoice=="all"?InventoryReader.MapId(ChosenMap!):mapChoice;LedgerDialogs.Alert(c,selected,map,scope);}
+  if(Widgets.ButtonText(new Rect(rect.width-170,y,170,30),T("Alerts"))){LedgerDialogs.Alert(c,selected,mapChoice,scope);}
   y+=38;float metricWidth=(rect.width-32)/5;double factor=Factor(selected);int decimals=unit=="count"?0:2;
   string observed=T("RecordedPeriod",TextCatalog.Day(sum.From),TextCatalog.Day(sum.To));
   LedgerStyle.Metric(new Rect(0,y,metricWidth,66),T("Current"),row.Live.HasValue?N(row.Live.Value*factor,decimals):"—",LedgerStyle.Stock,T("LiveStockHint"));
@@ -197,7 +212,7 @@ public sealed class LedgerWindow : MainTabWindow {
   for(int i=0;i<tabLabels.Length;i++){int index=i;if(Widgets.ButtonText(new Rect(i*160,y,150,28),T(tabLabels[i]))) {detailTab=index;detailScroll=Vector2.zero;}}
   y+=35;
   var viewport=new Rect(0,y,rect.width,Math.Max(40,rect.yMax-y));var lines=new List<(string Text,Thing? Target)>();
-  string detailKey=c.Revision+"|"+selected+"|"+scope+"|"+mapChoice+"|"+detailTab+"|"+range.From+"|"+range.To+"|"+unit;
+  string detailKey=c.Revision+"|"+(detailTab==2?LiveStamp(c):0)+"|"+selected+"|"+scope+"|"+mapChoice+"|"+detailTab+"|"+range.From+"|"+range.To+"|"+unit;
   if(detailKey==detailCacheKey)lines=detailCache;else{
   if(detailTab==0){
    lines.Add((T("FlowHeader"),null));foreach(var flow in sum.Flows.OrderByDescending(f=>f.In+f.Out))lines.Add((T("Cause_"+flow.Cause)+"    +"+N(flow.In*Factor(selected),2)+"    −"+N(flow.Out*Factor(selected),2),null));

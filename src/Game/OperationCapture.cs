@@ -49,7 +49,7 @@ public sealed class OperationCapture : IDisposable {
      if(f.Out>0)component.Record(mapId,scope,f.Resource,tick,-f.Out,negative,actor,facility,tag+":out",actorId,facilityId);
     }
    }
-   component.Live[mapId]=after;component.OperationCount++;component.OperationMs+=before.Milliseconds+after.Milliseconds;component.Revision++;
+   component.Live[mapId]=after;component.OperationCount++;component.OperationMs+=before.Milliseconds+after.Milliseconds;component.LiveRevision++;
   }catch(Exception ex){component.Invalidate(InventoryReader.MapId(map));LedgerGameComponent.Report(ex);}
   finally{if(ReferenceEquals(Current,this))Current=null;}
  }

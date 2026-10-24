@@ -98,7 +98,8 @@ public sealed class LedgerGameComponent : GameComponent {
  }
  public override void GameComponentTick()=>SampleAll();
  public override void GameComponentOnGUI(){
-  if(Current.ProgramState==ProgramState.Playing&&DefDatabase<KeyBindingDef>.GetNamedSilentFail("ResourceLedger_Open")?.KeyDownEvent==true){
+  // Skip while a text field has focus: KeyDownEvent only ignores the quick search box, so a bound letter would be eaten while typing.
+  if(Current.ProgramState==ProgramState.Playing&&GUIUtility.keyboardControl==0&&DefDatabase<KeyBindingDef>.GetNamedSilentFail("ResourceLedger_Open")?.KeyDownEvent==true){
    var button=DefDatabase<MainButtonDef>.GetNamedSilentFail("ResourceLedger");
    if(button!=null)Find.MainTabsRoot.ToggleTab(button);
   }

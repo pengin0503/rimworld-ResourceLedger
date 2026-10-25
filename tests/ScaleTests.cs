@@ -66,6 +66,18 @@ public static class ScaleTests {
    var l=new Ledger();var s=new Series{Map="m",Scope="map",Resource="Steel",Periods=new(){new Period{From=0,To=2500,Start=1,End=2,In=1,Flows=new(){new Flow{Cause=Cause.Mining,In=1}}}}};
    l.Series[Ledger.Key("m","map","Steel")]=s;l.Trim(2500,new Retention());Yes(Aligned(s));
   });
+  test("CSV exports ranges that lie inside an unchanged period",()=>{
+   var l=new Ledger();for(int h=0;h<=240;h++)l.Observe("m","map",h*2500L,C(7));
+   string[] Rows(long from,long to,string kind)=>CsvExport.Export(l,l.Series.Values,from,to,kind).Split('\n',StringSplitOptions.RemoveEmptyEntries).Skip(1).ToArray();
+   var history=Rows(300000,600000,"history");Eq(1,history.Length);Yes(history[0].Contains(",300000,600000,7,7,0,0,0,true,"),history[0]);
+   var summary=Rows(310000,320000,"summary");Eq(1,summary.Length);Yes(summary[0].Contains(",310000,320000,7,7,0,0,0,true,"),summary[0]);
+  });
+  test("Graph range keeps unchanged history before a later change",()=>{
+   var l=new Ledger();for(int h=0;h<=240;h++)l.Observe("m","map",h*2500L,C(7));
+   l.Record(new LedgerEvent{Id="c",Map="m",Scope="map",Resource="Steel",Tick=601000,Delta=1,Cause=Cause.Mining});l.Observe("m","map",602500,C(8));
+   Eq(((long,long)?)(302500L,602500L),Queries.KnownRange(l.Series.Values.Single(),302500,602500));
+   Eq(((long,long)?)null,Queries.KnownRange(l.Series.Values.Single(),700000,800000));
+  });
   test("Unchanged stock of hundreds of types stays small to save",()=>{
    var l=new Ledger();var counts=Enumerable.Range(0,300).ToDictionary(i=>"R"+i,i=>1L);
    for(int h=0;h<=24*80;h++){l.Observe("m","map",h*2500L,counts);l.Observe("m","stored",h*2500L,counts);if(h%24==0)l.Trim(h*2500L,new Retention());}

@@ -11,9 +11,9 @@ public static class LedgerGraph {
  public static void Draw(Rect rect,IReadOnlyList<(string Label,Series Series,double Factor)> sources,long from,long to,long requestedInterval,bool increase,bool decrease,bool net,string unit,string cacheToken){
   Widgets.DrawBoxSolid(rect,new Color(.07f,.08f,.10f));
   if(to<=from||sources.Count==0){Widgets.Label(rect.ContractedBy(20),TextCatalog.Get("NoHistory"));return;}
-  var recorded=sources.SelectMany(s=>s.Series.Samples).Where(p=>p.Tick>=from&&p.Tick<=to).ToList();
+  var known=sources.Select(s=>Queries.KnownRange(s.Series,from,to)).Where(r=>r!=null).Select(r=>r!.Value).ToList();
   bool limited=false;
-  if(recorded.Count>1){long first=recorded.Min(p=>p.Tick),last=recorded.Max(p=>p.Tick);if(last>first){limited=first>from||last<to;from=first;to=last;}}
+  if(known.Count>0){long first=known.Min(r=>r.From),last=known.Max(r=>r.To);if(last>first){limited=first>from||last<to;from=first;to=last;}}
   long interval=requestedInterval<=0?(to-from<=120000?2500:60000):Math.Max(2500,requestedInterval);
   interval=Math.Max(interval,(long)Math.Ceiling((to-from)/(240d*interval))*interval);
   // Unchanged periods can be split exactly, so only periods with flows limit how fine the buckets can be.

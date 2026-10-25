@@ -19,6 +19,13 @@ public static class Queries {
   }
   if(cursor!=last.Item1)r.Continuous=false;return r;
  }
+ /// <summary>First and last ticks in the range with a known stock: recorded samples, or any tick inside an unchanged period.</summary>
+ public static (long From,long To)? KnownRange(Series s,long from,long to){
+  long first=long.MaxValue,last=long.MinValue;
+  foreach(var x in s.Samples)if(x.Tick>=from&&x.Tick<=to){first=Math.Min(first,x.Tick);last=Math.Max(last,x.Tick);}
+  foreach(var p in s.Periods)if(p.Flat&&p.From<to&&p.To>from){first=Math.Min(first,Math.Max(p.From,from));last=Math.Max(last,Math.Min(p.To,to));}
+  return first<=last?(first,last):null;
+ }
  public static Forecast Forecast(Series s,long now,int days){
   var f=new Forecast();var summary=Summarize(s,Math.Max(0,now-Math.Clamp(days,1,600)*60000L),now);f.ObservedDays=(summary.To-summary.From)/60000d;
   if(s.PendingGap||!summary.Continuous||f.ObservedDays<1||now-summary.To>60000)return f;

@@ -8,6 +8,6 @@
 
 **ゲーム用は `ResourceLedger_0.3.0_Mod.zip` です。** 展開した `ResourceLedger` フォルダーを `RimWorld/Mods` に配置し、Harmonyの1.7対応版と一緒に有効化してください。以前の版からは同じフォルダーを置き換えます。既存の履歴はそのまま読み込み、次の記録から新しい方式で保存します。
 
-RimWorld 1.7専用。実DLL参照ビルド、94件のC#テスト（79コア＋15 API契約・Harmony適用）、Pythonテストと配布物検証を実行しています。
+RimWorld 1.7専用。実DLL参照ビルド、96件のC#テスト（81コア＋15 API契約・Harmony適用）、Pythonテストと配布物検証を実行しています。
 
 ゲーム内での画面表示・通常プレイ・実セーブ更新・TPSは未確認のため、プレリリースです。検証範囲と制限はREADME.md・VALIDATION.md・REVIEW.mdを参照してください。

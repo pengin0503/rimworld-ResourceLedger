@@ -42,7 +42,7 @@
  <RL_Hysteresis>Recovery margin</RL_Hysteresis>
  <RL_Cooldown>Repeat interval: {0} days</RL_Cooldown>
  <RL_DeleteRule>Delete this rule</RL_DeleteRule>
- <RL_AlertHint>Rules apply to this resource, map and scope. Drop and forecast rules use the last 5 days. Notification values use item counts, independently of the graph unit.</RL_AlertHint>
+ <RL_AlertHint>Rules apply to this resource, map and scope; with all settlements selected they use the combined stock of every player home. Drop and forecast rules use the last 5 days. Notification values use item counts, independently of the graph unit.</RL_AlertHint>
  <RL_InvalidNumber>Enter finite, nonnegative numbers.</RL_InvalidNumber>
  <RL_Alert_Below>Below stock limit</RL_Alert_Below>
  <RL_Alert_Above>Above stock limit</RL_Alert_Above>
@@ -53,6 +53,7 @@
  <RL_Other>Other</RL_Other>
  <RL_NoColony>Open a player settlement to view resource data.</RL_NoColony>
  <RL_UnsupportedSave>This save contains an unsupported or damaged Resource Ledger payload. It is preserved unchanged; recording is disabled.</RL_UnsupportedSave>
+ <RL_StorageScale>Stored now: {0} tracked types, {1} series, {2} history periods, {3} detail records. Ledger size at the last save or load: {4} KB.</RL_StorageScale>
  <RL_AllMaps>All active settlements</RL_AllMaps>
  <RL_ScopeMap>Whole map + carried items</RL_ScopeMap>
  <RL_ScopeStored>Storage only</RL_ScopeStored>

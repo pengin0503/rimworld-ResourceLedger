@@ -38,7 +38,11 @@ public class Ledger {
     p.Adjustment=count-prev.Count-(p.In-p.Out);
     if(p.Adjustment!=0){AddFlow(p,Cause.Unclassified,p.Adjustment);var adjustment=new LedgerEvent{Id="adjust:"+key+":"+tick,Map=map,Scope=scope,Resource=resource,Tick=tick,ClosedAt=tick,Delta=p.Adjustment,Cause=Cause.Unclassified};Events.Add(adjustment);eventIndex[adjustment.Id]=adjustment;}
    }
-   s.Pending.RemoveAll(e=>e.Tick<=tick);s.Periods.Add(p);s.Samples.Add(new Sample{Tick=tick,Count=count,Gap=p.Gap});
+   s.Pending.RemoveAll(e=>e.Tick<=tick);
+   // Unchanged stock extends the previous unchanged period instead of storing a new one every sample.
+   var last=s.Periods.Count>0?s.Periods[^1]:null;
+   if(p.Flat&&last!=null&&last.Flat&&last.To==prev.Tick&&s.Samples.Count==s.Periods.Count+1){last.To=tick;prev.Tick=tick;continue;}
+   s.Periods.Add(p);s.Samples.Add(new Sample{Tick=tick,Count=count,Gap=p.Gap});
   }
  }
  public void Record(LedgerEvent e){
@@ -51,20 +55,44 @@ public class Ledger {
   var f=p.Flows.FirstOrDefault(f=>f.Cause==cause);if(f==null)p.Flows.Add(f=new Flow{Cause=cause});
   if(delta>0){f.In+=delta;p.In+=delta;}else{f.Out-=delta;p.Out-=delta;}
  }
+ public const long TicksPerDay=60000;
+ /// <summary>
+ /// Rolls hourly periods older than the hourly window into one period per day and drops periods older than the daily
+ /// window. Only periods that crossed the hourly cutoff since the last call are touched, so the cost does not grow with
+ /// the stored history. Periods and samples stay aligned: Samples[0] starts Periods[0] and Samples[i+1] ends Periods[i].
+ /// </summary>
  public void Trim(long now,Retention policy){
-  var hourlyCutoff=now-Math.Max(1,policy.HourlyDays)*60000L;var dailyCutoff=now-Math.Max(policy.HourlyDays,policy.DailyDays)*60000L;
+  var hourlyCutoff=now-Math.Max(1,policy.HourlyDays)*TicksPerDay;var dailyCutoff=now-Math.Max(policy.HourlyDays,policy.DailyDays)*TicksPerDay;
   foreach(var s in Series.Values){
-   var rolled=new List<Period>();
-   foreach(var group in s.Periods.Where(p=>p.To<=hourlyCutoff&&p.To>=dailyCutoff).GroupBy(p=>(p.To-1)/60000)){
-    var ordered=group.OrderBy(p=>p.From).ToList();var p=new Period{From=ordered[0].From,To=ordered[^1].To,Start=ordered[0].Start,End=ordered[^1].End,Gap=ordered.Any(x=>x.Gap)||ordered.Zip(ordered.Skip(1),(a,b)=>a.To!=b.From).Any(x=>x),Adjustment=ordered.Sum(x=>x.Adjustment)};
-    foreach(var source in ordered)foreach(var f in source.Flows){AddFlow(p,f.Cause,f.In);AddFlow(p,f.Cause,-f.Out);}rolled.Add(p);
+   if(s.Periods.Count>0&&s.Samples.Count!=s.Periods.Count+1)AlignSamples(s);
+   int i=0;while(i<s.Periods.Count&&s.Periods[i].Daily)i++;
+   while(i<s.Periods.Count&&s.Periods[i].To<=hourlyCutoff){
+    var p=s.Periods[i];long dayStart=(p.To-1)/TicksPerDay*TicksPerDay;
+    if(p.Flat&&p.From<dayStart){
+     // Exact split: the earlier days stay one unchanged period, the rest joins its day.
+     s.Periods.Insert(i,new Period{From=p.From,To=dayStart,Start=p.Start,End=p.Start,Daily=true});s.Samples.Insert(i+1,new Sample{Tick=dayStart,Count=p.Start});
+     p.From=dayStart;i++;
+    }
+    var day=i>0?s.Periods[i-1]:null;
+    if(day!=null&&day.Daily&&(day.To-1)/TicksPerDay==(p.To-1)/TicksPerDay){
+     day.Gap|=p.Gap||day.To!=p.From;day.To=p.To;day.End=p.End;day.Adjustment+=p.Adjustment;
+     foreach(var f in p.Flows){AddFlow(day,f.Cause,f.In);AddFlow(day,f.Cause,-f.Out);}
+     s.Periods.RemoveAt(i);s.Samples.RemoveAt(i);s.Samples[i].Gap=day.Gap;
+    }
+    else{p.Daily=true;i++;}
    }
-   s.Periods=rolled.Concat(s.Periods.Where(p=>p.To>hourlyCutoff)).OrderBy(p=>p.From).ToList();
-   if(s.Periods.Count>0){s.Samples=new(){new Sample{Tick=s.Periods[0].From,Count=s.Periods[0].Start}};s.Samples.AddRange(s.Periods.Select(p=>new Sample{Tick=p.To,Count=p.End,Gap=p.Gap}));}else if(s.Samples.Count>1)s.Samples=new(){s.Samples[^1]};
+   int drop=0;while(drop<s.Periods.Count&&s.Periods[drop].To<dailyCutoff)drop++;
+   if(drop>0){s.Periods.RemoveRange(0,drop);s.Samples.RemoveRange(0,drop);}
+   if(s.Periods.Count==0&&s.Samples.Count>1)s.Samples.RemoveRange(0,s.Samples.Count-1);
   }
   var cutoff=now-Math.Max(0,policy.DetailDays)*60000L;Events.RemoveAll(e=>e.Tick<cutoff);var cap=Math.Max(0,policy.DetailLimit);if(Events.Count>cap)Events.RemoveRange(0,Events.Count-cap);
   foreach(var key in SeenIds.Where(x=>x.Value<cutoff).Select(x=>x.Key).ToArray())SeenIds.Remove(key);
   eventIndex=null;
+ }
+ /// <summary>Rebuilds samples from periods for histories saved before periods and samples were kept aligned.</summary>
+ private static void AlignSamples(Series s){
+  s.Periods=s.Periods.OrderBy(p=>p.From).ToList();
+  s.Samples=new(){new Sample{Tick=s.Periods[0].From,Count=s.Periods[0].Start}};s.Samples.AddRange(s.Periods.Select(p=>new Sample{Tick=p.To,Count=p.End,Gap=p.Gap}));
  }
 }
 public static class LedgerSerializer {

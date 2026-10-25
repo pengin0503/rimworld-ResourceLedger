@@ -1,13 +1,30 @@
 namespace ResourceLedger.Core;
 public static class Queries {
  public static Summary Summarize(Series s,long from,long to){
-  var samples=s.Samples.Where(x=>x.Tick>=from&&x.Tick<=to).OrderBy(x=>x.Tick).ToList();if(samples.Count==0)return new Summary();
-  var first=samples[0];var last=samples[^1];var r=new Summary{From=first.Tick,To=last.Tick,Start=first.Count,End=last.Count,Continuous=samples.Count>1};long cursor=first.Tick;
-  foreach(var p in s.Periods.Where(p=>p.From>=first.Tick&&p.To<=last.Tick).OrderBy(p=>p.From)){
-   if(p.Gap||p.From!=cursor)r.Continuous=false;cursor=p.To;r.Increase+=p.In;r.Decrease+=p.Out;r.Adjustment+=p.Adjustment;
+  var points=s.Samples.Where(x=>x.Tick>=from&&x.Tick<=to).OrderBy(x=>x.Tick).Select(x=>(x.Tick,x.Count)).ToList();
+  // An unchanged period that contains a range end has a known value there, so the range is not cut short.
+  foreach(var p in s.Periods){
+   if(!p.Flat)continue;
+   if(p.From<from&&from<p.To)points.Insert(0,(from,p.Start));
+   if(p.From<to&&to<p.To)points.Add((to,p.End));
+  }
+  if(points.Count==0)return new Summary();
+  var first=points[0];var last=points[^1];
+  var r=new Summary{From=first.Item1,To=last.Item1,Start=first.Item2,End=last.Item2,Continuous=points.Count>1};long cursor=first.Item1;
+  foreach(var p in s.Periods.Where(p=>p.To>first.Item1&&p.From<last.Item1).OrderBy(p=>p.From)){
+   long a=Math.Max(p.From,first.Item1),b=Math.Min(p.To,last.Item1);
+   if((a!=p.From||b!=p.To)&&!p.Flat){r.Continuous=false;continue;}
+   if(p.Gap||a!=cursor)r.Continuous=false;cursor=b;r.Increase+=p.In;r.Decrease+=p.Out;r.Adjustment+=p.Adjustment;
    foreach(var flow in p.Flows){var f=r.Flows.FirstOrDefault(x=>x.Cause==flow.Cause);if(f==null)r.Flows.Add(f=new Flow{Cause=flow.Cause});f.In+=flow.In;f.Out+=flow.Out;}
   }
-  if(cursor!=last.Tick)r.Continuous=false;return r;
+  if(cursor!=last.Item1)r.Continuous=false;return r;
+ }
+ /// <summary>First and last ticks in the range with a known stock: recorded samples, or any tick inside an unchanged period.</summary>
+ public static (long From,long To)? KnownRange(Series s,long from,long to){
+  long first=long.MaxValue,last=long.MinValue;
+  foreach(var x in s.Samples)if(x.Tick>=from&&x.Tick<=to){first=Math.Min(first,x.Tick);last=Math.Max(last,x.Tick);}
+  foreach(var p in s.Periods)if(p.Flat&&p.From<to&&p.To>from){first=Math.Min(first,Math.Max(p.From,from));last=Math.Max(last,Math.Min(p.To,to));}
+  return first<=last?(first,last):null;
  }
  public static Forecast Forecast(Series s,long now,int days){
   var f=new Forecast();var summary=Summarize(s,Math.Max(0,now-Math.Clamp(days,1,600)*60000L),now);f.ObservedDays=(summary.To-summary.From)/60000d;

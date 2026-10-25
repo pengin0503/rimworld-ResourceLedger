@@ -9,29 +9,43 @@ public static class ViewMath {
  public static Series Merge(IEnumerable<Series> sources){
   var all=sources.ToList();if(all.Count==0)return new Series();if(all.Count==1)return all[0];
   var result=new Series{Resource=all[0].Resource,Map="all",Scope=all[0].Scope,PendingGap=all.Any(s=>s.PendingGap)};
-  var samples=all.Select(s=>s.Samples.ToDictionary(p=>p.Tick)).ToList();
-  var ticks=samples[0].Keys.ToHashSet();foreach(var index in samples.Skip(1))ticks.IntersectWith(index.Keys);
-  foreach(var tick in ticks.Order())result.Samples.Add(new Sample{Tick=tick,Count=samples.Sum(index=>index[tick].Count),Gap=samples.Any(index=>index[tick].Gap)});
-  var cursor=new int[all.Count];
+  // A tick is usable when every map has a value there: a recorded sample, or any tick inside an unchanged period.
+  var ticks=new SortedSet<long>(all.SelectMany(s=>s.Samples.Select(p=>p.Tick)));
+  foreach(var tick in ticks){
+   long sum=0;bool gap=false,known=true;
+   foreach(var s in all){if(ValueAt(s,tick) is {} v){sum+=v.Count;gap|=v.Gap;}else{known=false;break;}}
+   if(known)result.Samples.Add(new Sample{Tick=tick,Count=sum,Gap=gap});
+  }
   for(int i=1;i<result.Samples.Count;i++){
    var a=result.Samples[i-1];var b=result.Samples[i];var merged=new Period{From=a.Tick,To=b.Tick,Start=a.Count,End=b.Count};
-   for(int source=0;source<all.Count;source++){
-    var periods=all[source].Periods;
-    while(cursor[source]<periods.Count&&periods[cursor[source]].To<=a.Tick)cursor[source]++;
+   foreach(var s in all){
     long next=a.Tick;
-    while(cursor[source]<periods.Count&&periods[cursor[source]].To<=b.Tick){
-     var p=periods[cursor[source]++];if(p.From!=next||p.Gap)merged.Gap=true;next=p.To;merged.Adjustment+=p.Adjustment;
-     foreach(var f in p.Flows){Ledger.AddFlow(merged,f.Cause,f.In);Ledger.AddFlow(merged,f.Cause,-f.Out);}
+    for(int k=FirstEndingAfter(s.Periods,a.Tick);k<s.Periods.Count&&s.Periods[k].From<b.Tick;k++){
+     var p=s.Periods[k];long from=Math.Max(p.From,a.Tick),to=Math.Min(p.To,b.Tick);
+     if(from!=next||p.Gap||(from!=p.From||to!=p.To)&&!p.Flat)merged.Gap=true;next=to;
+     if(from==p.From&&to==p.To){merged.Adjustment+=p.Adjustment;foreach(var f in p.Flows){Ledger.AddFlow(merged,f.Cause,f.In);Ledger.AddFlow(merged,f.Cause,-f.Out);}}
     }
     if(next!=b.Tick)merged.Gap=true;
    }
    result.Periods.Add(merged);b.Gap|=merged.Gap;
   }return result;
  }
+ private static (long Count,bool Gap)? ValueAt(Series s,long tick){
+  int lo=0,hi=s.Samples.Count-1;
+  while(lo<=hi){int mid=(lo+hi)/2;long t=s.Samples[mid].Tick;if(t==tick)return (s.Samples[mid].Count,s.Samples[mid].Gap);if(t<tick)lo=mid+1;else hi=mid-1;}
+  int k=FirstEndingAfter(s.Periods,tick);
+  return k<s.Periods.Count&&s.Periods[k].From<tick&&s.Periods[k].Flat?(s.Periods[k].Start,false):null;
+ }
+ /// <summary>Index of the first period whose end is after <paramref name="tick"/>; periods are ordered by time.</summary>
+ private static int FirstEndingAfter(List<Period> periods,long tick){
+  int lo=0,hi=periods.Count;
+  while(lo<hi){int mid=(lo+hi)/2;if(periods[mid].To<=tick)lo=mid+1;else hi=mid;}
+  return lo;
+ }
 
  public static List<Period> Bars(Series s,long from,long to){
   var result=new List<Period>();
-  foreach(var g in s.Periods.Where(p=>p.From>=from&&p.To<=to).GroupBy(p=>(p.To-1)/60000)){
+  foreach(var g in PeriodMath.SplitFlat(s.Periods,60000,from,to).GroupBy(p=>(p.To-1)/60000)){
    var rows=g.OrderBy(p=>p.From).ToList();result.Add(new Period{From=rows[0].From,To=rows[^1].To,Start=rows[0].Start,End=rows[^1].End,In=rows.Sum(p=>p.In),Out=rows.Sum(p=>p.Out),Adjustment=rows.Sum(p=>p.Adjustment),Gap=rows.Any(p=>p.Gap)||rows.Zip(rows.Skip(1),(a,b)=>a.To!=b.From).Any(x=>x)});
   }return result;
  }

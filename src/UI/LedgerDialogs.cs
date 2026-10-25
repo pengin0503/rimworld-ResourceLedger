@@ -16,7 +16,13 @@ public static class LedgerDialogs {
   l.Label(TextCatalog.Get("DailyDays",settings.DailyDays));settings.DailyDays=Math.Max(settings.HourlyDays,(int)Math.Round(l.Slider(settings.DailyDays,60,1200)));
   l.Label(TextCatalog.Get("DetailDays",settings.DetailDays));settings.DetailDays=(int)Math.Round(l.Slider(settings.DetailDays,0,30));
   l.Label(TextCatalog.Get("DetailLimit",settings.DetailLimit));settings.DetailLimit=(int)Math.Round(l.Slider(settings.DetailLimit,0,50000)/100)*100;
-  l.Gap(12);l.Label(TextCatalog.Get("RecordingHint"));l.End();
+  l.Gap(12);l.Label(TextCatalog.Get("RecordingHint"));
+  // DESIGN §7: show how much the current settings store, so the cost of long retention is visible.
+  if(Current.ProgramState==ProgramState.Playing&&LedgerGameComponent.Instance is {} c){
+   var data=c.Data;string size=c.LastPayloadLength<0?"—":TextCatalog.Number(c.LastPayloadLength/1024d,0);
+   l.Gap(6);l.Label(TextCatalog.Get("StorageScale",data.Tracked.Count,data.Series.Count,data.Series.Values.Sum(s=>s.Periods.Count),data.Events.Count,size));
+  }
+  l.End();
  }
  public static void Recording()=>Find.WindowStack.Add(new SettingsWindow());
  private sealed class SettingsWindow:Window {
@@ -67,7 +73,7 @@ public static class LedgerDialogs {
   }
   public override void DoWindowContents(Rect rect){
    var l=new Listing_Standard();l.Begin(new Rect(0,35,rect.width,rect.height-100));
-   l.Label(c.Data.Names.GetValueOrDefault(resource,resource));l.Label(TextCatalog.Get("Map")+": "+c.Data.MapNames.GetValueOrDefault(map,map));
+   l.Label(c.Data.Names.GetValueOrDefault(resource,resource));l.Label(TextCatalog.Get("Map")+": "+(map==LedgerGameComponent.AllMaps?TextCatalog.Get("AllMaps"):c.Data.MapNames.GetValueOrDefault(map,map)));
    l.CheckboxLabeled(TextCatalog.Get("Enabled"),ref rule.Enabled);l.CheckboxLabeled(TextCatalog.Get("Muted"),ref rule.Muted);
    if(l.ButtonText(TextCatalog.Get("Alert_"+rule.Kind)))Find.WindowStack.Add(new FloatMenu(Enum.GetValues<AlertKind>().Select(kind=>new FloatMenuOption(TextCatalog.Get("Alert_"+kind),()=>rule.Kind=kind)).ToList()));
    threshold=l.TextEntryLabeled(TextCatalog.Get("Threshold"),threshold);hysteresis=l.TextEntryLabeled(TextCatalog.Get("Hysteresis"),hysteresis);

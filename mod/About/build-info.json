@@ -1,9 +1,9 @@
 {
-  "version": "0.3.1",
-  "source_sha256": "0b42c32357711ee3076ff38269627fc41d66a77051a4c5852ffc22ac80812ac0",
+  "version": "0.3.2",
+  "source_sha256": "c6c0930d988f8bb980adb11496281612fd70b401f4146fef32c4a764d5ba59d0",
   "assemblies": {
-    "ResourceLedger.Core.dll": "e5b183279701b0c35f028d9f733c27f71b7a0eef0780451f4fa70f5e62d706ea",
-    "ResourceLedger.dll": "968f156dba1d49d9be8a1974816b0d21f0d5b4b4ccef0334eb6cfadcfd18d346"
+    "ResourceLedger.Core.dll": "66c96a9639a629d95703e666b488ca5e639307d2aecc8bc110bf27067a1c8450",
+    "ResourceLedger.dll": "c9b1b589ad3cc4a834589ffb2c7d043d3bb4d6735ffca12eaf24850aa850ad5d"
   },
   "build": "RimWorld 1.7 reference build; game binaries are not redistributed."
 }

@@ -133,7 +133,7 @@ public sealed class LedgerGameComponent : GameComponent {
   }
  }
  public void Record(string map,string scope,string resource,long tick,long delta,Cause cause,string actor,string facility,string id,string actorId="",string facilityId=""){
-  if(ReadOnly||!Data.Tracked.Contains(resource))return;
+  if(ReadOnly||!Data.IsTracked(resource))return;
   // Pending events only reach summaries at the next sample, which bumps Revision itself.
   Data.Record(new LedgerEvent{Map=map,Scope=scope,Resource=resource,Tick=tick,Delta=delta,Cause=cause,Actor=actor,Facility=facility,Id=id,ActorId=actorId,FacilityId=facilityId});
  }

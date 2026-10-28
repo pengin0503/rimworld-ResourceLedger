@@ -39,9 +39,13 @@ public sealed class OperationCapture : IDisposable {
    if(after.UnsupportedHolders>0)throw new InvalidOperationException("A storage holder could not be read; capture omitted.");
    component.Discover(after);component.EnsureBaseline(map,before);
    var mapId=InventoryReader.MapId(map);var tick=Find.TickManager.TicksGame;
+   var none=new Dictionary<string,long>();
    foreach(var (scope,counts) in scopeBefore){
-    var definition=component.Data.Scopes.FirstOrDefault(s=>s.Id==scope);
-    var consumed=before.ProjectConsumed(scope,Consumed,definition==null?null:new ScopeDefinitionAdapter{Groups=definition.Groups.ToHashSet()});
+    var consumed=none;
+    if(Consumed.Count>0){
+     var definition=component.Data.Scopes.FirstOrDefault(s=>s.Id==scope);
+     consumed=before.ProjectConsumed(scope,Consumed,definition==null?null:new ScopeDefinitionAdapter{Groups=definition.Groups.ToHashSet()});
+    }
     var flows=OperationDiff.Compute(counts,component.Project(after,scope),consumed);
     foreach(var f in flows){
      var tag=session+":"+Interlocked.Increment(ref sequence);

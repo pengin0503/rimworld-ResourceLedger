@@ -39,9 +39,15 @@ public static class Queries {
 }
 public static class OperationDiff {
  public static List<(string Resource,long In,long Out)> Compute(IReadOnlyDictionary<string,long> before,IReadOnlyDictionary<string,long> after,IReadOnlyDictionary<string,long> consumed){
-  var result=new List<(string,long,long)>();foreach(var resource in before.Keys.Concat(after.Keys).Concat(consumed.Keys).Distinct()){
-   long delta=after.GetValueOrDefault(resource)-before.GetValueOrDefault(resource),removed=Math.Max(0,consumed.GetValueOrDefault(resource)),gained=delta+removed;
-   if(gained<0){removed-=gained;gained=0;}if(gained!=0||removed!=0)result.Add((resource,gained,removed));
-  }return result;
+  // Same order as before.Keys.Concat(after.Keys).Concat(consumed.Keys).Distinct(), without building a set of every key.
+  var result=new List<(string,long,long)>();
+  foreach(var resource in before.Keys)Add(result,resource,before,after,consumed);
+  foreach(var resource in after.Keys)if(!before.ContainsKey(resource))Add(result,resource,before,after,consumed);
+  foreach(var resource in consumed.Keys)if(!before.ContainsKey(resource)&&!after.ContainsKey(resource))Add(result,resource,before,after,consumed);
+  return result;
+ }
+ private static void Add(List<(string,long,long)> result,string resource,IReadOnlyDictionary<string,long> before,IReadOnlyDictionary<string,long> after,IReadOnlyDictionary<string,long> consumed){
+  long delta=after.GetValueOrDefault(resource)-before.GetValueOrDefault(resource),removed=Math.Max(0,consumed.GetValueOrDefault(resource)),gained=delta+removed;
+  if(gained<0){removed-=gained;gained=0;}if(gained!=0||removed!=0)result.Add((resource,gained,removed));
  }
 }

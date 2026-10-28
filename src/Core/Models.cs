@@ -10,6 +10,14 @@ public class Period { public long From,To,Start,End,In,Out,Adjustment; public bo
  public bool Flat=>!Gap&&In==0&&Out==0&&Adjustment==0&&Start==End&&Flows.Count==0;
 }
 public class Series { public string Map="",Scope="",Resource=""; public bool PendingGap; public List<Sample> Samples=new();public List<Period> Periods=new(); public List<LedgerEvent> Pending=new(); }
+/// <summary>Tracked resource ids. Every change, including an in-place edit, bumps <see cref="Version"/>, so a lookup built from the list knows when it is stale.</summary>
+public sealed class TrackedList : System.Collections.ObjectModel.Collection<string> {
+ public int Version{get;private set;}
+ protected override void InsertItem(int index,string item){base.InsertItem(index,item);Version++;}
+ protected override void SetItem(int index,string item){base.SetItem(index,item);Version++;}
+ protected override void RemoveItem(int index){base.RemoveItem(index);Version++;}
+ protected override void ClearItems(){base.ClearItems();Version++;}
+}
 public class Retention { public int HourlyDays=60,DailyDays=600,DetailDays=7,DetailLimit=20000; }
 public class Summary { public long From,To,Start,End,Increase,Decrease,Adjustment;public long Net=>End-Start;public bool Continuous,CompleteAttribution=false;public double? Percent=>Start==0?null:Net*100d/Start;public double DailyMean=>To>From?Net*60000d/(To-From):0;public List<Flow> Flows=new(); }
 public class Forecast {public bool Available;public double Days,ObservedDays;public string Status="Insufficient";}

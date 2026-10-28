@@ -23,11 +23,11 @@ public sealed class LedgerGameComponent : GameComponent {
  public static LedgerGameComponent? Instance=>Current.Game?.GetComponent<LedgerGameComponent>();
  public LedgerGameComponent(Verse.Game game){}
  public IEnumerable<Map> Maps=>Find.Maps.Where(m=>m.IsPlayerHome);
- private HashSet<string>? resources;private Ledger? resourcesData;private int resourcesCount=-1;
- /// <summary>Tracked types with a loaded definition. Cached: tracking only ever grows, and a load replaces <see cref="Data"/>.</summary>
+ private HashSet<string>? resources;private Ledger? resourcesData;private int resourcesVersion=-1;
+ /// <summary>Tracked types with a loaded definition. Cached until the tracked list changes or a load replaces <see cref="Data"/>.</summary>
  public HashSet<string> Resources{get{
-  if(resources==null||!ReferenceEquals(resourcesData,Data)||resourcesCount!=Data.Tracked.Count){
-   resources=Data.Tracked.Where(id=>DefDatabase<ThingDef>.GetNamedSilentFail(id)!=null).ToHashSet(StringComparer.Ordinal);resourcesData=Data;resourcesCount=Data.Tracked.Count;
+  if(resources==null||!ReferenceEquals(resourcesData,Data)||resourcesVersion!=Data.Tracked.Version){
+   resources=Data.Tracked.Where(id=>DefDatabase<ThingDef>.GetNamedSilentFail(id)!=null).ToHashSet(StringComparer.Ordinal);resourcesData=Data;resourcesVersion=Data.Tracked.Version;
   }
   return resources;
  }}

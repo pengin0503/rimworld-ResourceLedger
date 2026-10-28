@@ -15,9 +15,12 @@ jobs:
         shell: bash
         run: |
           cd "$DOTNET_ROOT"
-          tar -czf /tmp/dotnet-sdk.tar.gz dotnet host/fxr/10.* sdk/10.* shared/Microsoft.NETCore.App/10.* packs/Microsoft.NETCore.App.Ref/10.* packs/Microsoft.AspNetCore.App.Ref/10.* packs/Microsoft.NETCore.App.Host.linux-x64/10.* sdk-manifests/10.*
+          sdk="$(dotnet --version)"
+          runtime="$(dotnet --list-runtimes | awk '$1 == "Microsoft.NETCore.App" && $2 ~ /^10\./ { print $2 }' | sort -V | tail -1)"
+          tar -I 'gzip -1' -cf /tmp/dotnet-sdk.tar.gz dotnet "host/fxr/$runtime" "sdk/$sdk" "shared/Microsoft.NETCore.App/$runtime" "packs/Microsoft.NETCore.App.Ref/$runtime" "packs/Microsoft.AspNetCore.App.Ref/$runtime" "packs/Microsoft.NETCore.App.Host.linux-x64/$runtime" "sdk-manifests/$sdk"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: temporary-dotnet-sdk
           path: /tmp/dotnet-sdk.tar.gz
+          compression-level: 0
           retention-days: 1

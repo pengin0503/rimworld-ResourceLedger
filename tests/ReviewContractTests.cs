@@ -20,6 +20,21 @@ public static class ReviewContractTests {
    return(snapshot,stored,carried);
   }
   object Custom(){var custom=Make("ScopeDefinitionAdapter");Set(custom,"Groups",new HashSet<string>{"stock"});return custom;}
+  test("Map projection returns independent accumulated totals",()=>{
+   var (snapshot,_,_)=Snapshot();var project=snapshot.GetType().GetMethod("Project")!;
+   var counts=(Dictionary<string,long>)project.Invoke(snapshot,new object?[]{"map",null})!;
+   if(counts["Steel"]!=15)throw new Exception("incorrect map total");
+   counts["Steel"]=0;
+   if(((Dictionary<string,long>)snapshot.GetType().GetField("Counts")!.GetValue(snapshot)!)["Steel"]!=15)throw new Exception("projection modified the snapshot");
+  });
+  test("No consumed items produces no scoped consumption",()=>{
+   var (snapshot,_,_)=Snapshot();var empty=(IDictionary)Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(thingType,typeof(long)))!;
+   var project=snapshot.GetType().GetMethod("ProjectConsumed")!;
+   foreach(var (scope,custom) in new[]{("map",(object?)null),("stored",null),("custom",Custom())}){
+    var counts=(Dictionary<string,long>)project.Invoke(snapshot,new object?[]{scope,empty,custom})!;
+    if(counts.Count!=0)throw new Exception($"{scope}: unexpected consumption");
+   }
+  });
   test("Pawn inventory on a stockpile remains carried in every scope",()=>{
    var (snapshot,_,_)=Snapshot();var project=snapshot.GetType().GetMethod("Project")!;
    foreach(var (scope,custom,expected) in new[]{("map",(object?)null,15L),("stored",null,10L),("custom",Custom(),10L)}){

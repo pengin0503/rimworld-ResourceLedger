@@ -15,9 +15,13 @@ public class Ledger {
  public static string Key(string map,string scope,string resource)=>map+"|"+scope+"|"+resource;
  public void MarkGap(string map){foreach(var series in Series.Values.Where(s=>s.Map==map))series.PendingGap=true;}
  public void EnsureBaseline(string map,string scope,long tick,IReadOnlyDictionary<string,long> counts,IEnumerable<string> resources,bool historical=false){
+  EnsureBaselineLazy(map,scope,tick,()=>counts,resources,historical);
+ }
+ public void EnsureBaselineLazy(string map,string scope,long tick,Func<IReadOnlyDictionary<string,long>> counts,IEnumerable<string> resources,bool historical=false){
+  var missing=resources.Distinct().Where(id=>!Series.ContainsKey(Key(map,scope,id))).ToList();
+  if(missing.Count==0)return;
   if(historical&&scope!="map"&&scope!="stored"&&!Series.Values.Any(s=>s.Map==map&&s.Scope==scope&&s.Samples.Any(p=>p.Tick<=tick)))return;
-  var missing=resources.Distinct().Where(id=>!Series.ContainsKey(Key(map,scope,id))).ToDictionary(id=>id,id=>counts.GetValueOrDefault(id));
-  if(missing.Count>0)Observe(map,scope,tick,missing);
+  var current=counts();Observe(map,scope,tick,missing.ToDictionary(id=>id,id=>current.GetValueOrDefault(id)));
  }
  public List<string> Discover(IEnumerable<string> resources){
   var known=Tracked.ToHashSet(StringComparer.Ordinal);var added=new List<string>();

@@ -9,24 +9,43 @@ public class Ledger {
  public Dictionary<string,double> NutritionFactors=new(),ValueFactors=new();
  public Dictionary<string,long> SeenIds=new();
  public List<LedgerEvent> Events=new();
- public List<string> Tracked=new(),Favorites=new(),ActiveMaps=new();
+ public TrackedList Tracked=new();
+ public List<string> Favorites=new(),ActiveMaps=new();
  public List<AlertRule> Alerts=new();public List<ScopeDefinition> Scopes=new();
  private Dictionary<string,LedgerEvent>? eventIndex;
+ /// <summary>Resources already known to have a series in a map and scope. Series are only ever added: retention trims periods, and a load replaces the whole ledger.</summary>
+ private readonly Dictionary<(string Map,string Scope),HashSet<string>> baselined=new();
+ private HashSet<string>? trackedSet;private TrackedList? trackedSource;private int trackedVersion=-1;
  public static string Key(string map,string scope,string resource)=>map+"|"+scope+"|"+resource;
  public void MarkGap(string map){foreach(var series in Series.Values.Where(s=>s.Map==map))series.PendingGap=true;}
  public void EnsureBaseline(string map,string scope,long tick,IReadOnlyDictionary<string,long> counts,IEnumerable<string> resources,bool historical=false){
   EnsureBaselineLazy(map,scope,tick,()=>counts,resources,historical);
  }
  public void EnsureBaselineLazy(string map,string scope,long tick,Func<IReadOnlyDictionary<string,long>> counts,IEnumerable<string> resources,bool historical=false){
-  var missing=resources.Distinct().Where(id=>!Series.ContainsKey(Key(map,scope,id))).ToList();
-  if(missing.Count==0)return;
+  // Captures check the same resources several times per operation. A key built from a name is only needed the first time a resource is seen in a map and scope.
+  if(!baselined.TryGetValue((map,scope),out var known))baselined[(map,scope)]=known=new HashSet<string>(StringComparer.Ordinal);
+  List<string>? missing=null;
+  foreach(var id in resources){
+   if(known.Contains(id))continue;
+   if(Series.ContainsKey(Key(map,scope,id)))known.Add(id);else(missing??=new()).Add(id);
+  }
+  if(missing==null)return;
   if(historical&&scope!="map"&&scope!="stored"&&!Series.Values.Any(s=>s.Map==map&&s.Scope==scope&&s.Samples.Any(p=>p.Tick<=tick)))return;
-  var current=counts();Observe(map,scope,tick,missing.ToDictionary(id=>id,id=>current.GetValueOrDefault(id)));
+  var distinct=missing.Distinct().ToList();var current=counts();
+  Observe(map,scope,tick,distinct.ToDictionary(id=>id,id=>current.GetValueOrDefault(id)));
+  foreach(var id in distinct)known.Add(id);
  }
+ /// <summary>Lookup for <see cref="Tracked"/>, rebuilt whenever the list object or its <see cref="TrackedList.Version"/> changed.</summary>
+ private HashSet<string> TrackedSet(){
+  if(trackedSet==null||!ReferenceEquals(trackedSource,Tracked)||trackedVersion!=Tracked.Version){trackedSet=Tracked.ToHashSet(StringComparer.Ordinal);trackedSource=Tracked;trackedVersion=Tracked.Version;}
+  return trackedSet;
+ }
+ public bool IsTracked(string resource)=>TrackedSet().Contains(resource);
  public List<string> Discover(IEnumerable<string> resources){
-  var known=Tracked.ToHashSet(StringComparer.Ordinal);var added=new List<string>();
+  var known=TrackedSet();var added=new List<string>();
   foreach(var id in resources)if(!string.IsNullOrEmpty(id)&&known.Add(id)){Tracked.Add(id);added.Add(id);}
-  return added;
+  // The set already holds what was added above, so it stays valid for the new version.
+  trackedVersion=Tracked.Version;return added;
  }
  public void Observe(string map,string scope,long tick,IReadOnlyDictionary<string,long> counts,bool discontinuity=false){
   foreach(var (resource,count) in counts){

@@ -69,6 +69,7 @@ Test("Existing baselines avoid rebuilding scope inventory",()=>{
 FeatureTests.Register(Test);
 ReviewTests.Register(Test);
 ScaleTests.Register(Test);
+CaptureCostTests.Register(Test);
 if(args.Contains("--contracts"))ContractTests.Register(Test);
 int failed=0;
 foreach(var test in tests){try{test.Item2();Console.WriteLine("PASS "+test.Item1);}catch(Exception e){failed++;Console.WriteLine("FAIL "+test.Item1+": "+e.GetBaseException());}}
@@ -93,6 +94,25 @@ if(failed==0&&args.Contains("--benchmark")){
  }
  var payload=LedgerSerializer.Save(l);
  Console.WriteLine("BENCHMARK "+System.Text.Json.JsonSerializer.Serialize(new{scope="automatic tracking scale, core only",resources=300,scopes=2,changing_share=0.1,days=100,max_trim_ms=maxTrim,save_bytes=System.Text.Encoding.UTF8.GetByteCount(payload),history_periods=l.Series.Values.Sum(s=>s.Periods.Count)}));
+}
+if(failed==0&&args.Contains("--benchmark")){
+ // Ledger bookkeeping of one cause capture as OperationCapture runs it (500 types, map+stored+1 custom scope); the two map scans are not included.
+ var ids=Enumerable.Range(0,500).Select(i=>"R"+i).ToArray();var l=new Ledger();l.Discover(ids);var resources=l.Tracked.ToHashSet(StringComparer.Ordinal);
+ var scopes=new[]{"map","stored","custom"};var counts=ids.ToDictionary(k=>k,k=>100L);var none=new Dictionary<string,long>();
+ foreach(var scope in scopes)l.EnsureBaseline("m",scope,0,counts,resources);
+ void Capture(long tick){
+  var positive=counts.Where(p=>p.Value>0).Select(p=>p.Key);l.Discover(positive);
+  foreach(var scope in scopes)l.EnsureBaselineLazy("m",scope,tick,()=>counts,resources,true);
+  foreach(var scope in scopes)l.EnsureBaselineLazy("m",scope,tick,()=>counts,resources);
+  l.Discover(positive);foreach(var scope in scopes)l.EnsureBaselineLazy("m",scope,tick,()=>counts,resources);
+  var after=new Dictionary<string,long>(counts);after["R7"]+=3;
+  foreach(var scope in scopes)foreach(var flow in OperationDiff.Compute(counts,after,none))l.IsTracked(flow.Resource);
+ }
+ const int captures=20000;for(int i=0;i<2000;i++)Capture(i);
+ var allocated=GC.GetAllocatedBytesForCurrentThread();var sw=System.Diagnostics.Stopwatch.StartNew();
+ for(int i=0;i<captures;i++)Capture(i);
+ sw.Stop();allocated=GC.GetAllocatedBytesForCurrentThread()-allocated;
+ Console.WriteLine("BENCHMARK "+System.Text.Json.JsonSerializer.Serialize(new{scope="capture bookkeeping, core only, no map scan",resources=500,scopes=3,captures,us_per_capture=sw.Elapsed.TotalMilliseconds*1000/captures,bytes_per_capture=allocated/captures}));
 }
 return failed==0?0:1;
 

@@ -58,6 +58,14 @@ Test("Delayed composition gaps also break graph lines",()=>{var l=Seed();Observe
 Test("Merge keeps gross flows across different sampling intervals",()=>{var a=Seed();Event(a,1,1,Cause.Mining);Observe(a,2500,101);Event(a,2501,1,Cause.Mining);Observe(a,5000,102);var b=Seed();Event(b,1,5,Cause.Mining);Observe(b,5000,105);var s=Queries.Summarize(ViewMath.Merge(new[]{a.Series.Values.Single(),b.Series.Values.Single()}),0,5000);Eq(7L,s.Increase);Eq(7L,s.Net);Yes(s.Continuous);});
 Test("Daily chart marks an unrecorded interval as a gap",()=>{var s=new Series{Periods=new(){new Period{From=0,To=2500,Start=100,End=110,In=10},new Period{From=5000,To=7500,Start=110,End=120,In=10}}};Yes(ViewMath.Bars(s,0,7500).Single().Gap);});
 Test("Daily chart preserves unexplained adjustments",()=>{var s=new Series{Periods=new(){new Period{From=0,To=2500,Start=100,End=110,In=10,Adjustment=10}}};Eq(10L,ViewMath.Bars(s,0,2500).Single().Adjustment);});
+Test("Existing baselines avoid rebuilding scope inventory",()=>{
+ var ledger=Seed();int reads=0;
+ var method=typeof(Ledger).GetMethod("EnsureBaselineLazy") ?? throw new Exception("Lazy baseline calculation is missing");
+ Func<IReadOnlyDictionary<string,long>> read=()=>{reads++;return new Dictionary<string,long>{{"Steel",100},{"Wood",7}};};
+ method.Invoke(ledger,new object[]{"m","map",0L,read,new[]{"Steel"},false});Eq(0,reads);
+ method.Invoke(ledger,new object[]{"m","map",0L,read,new[]{"Steel","Wood"},false});Eq(1,reads);
+ Eq(7L,ledger.Series[Ledger.Key("m","map","Wood")].Samples.Single().Count);
+});
 FeatureTests.Register(Test);
 ReviewTests.Register(Test);
 ScaleTests.Register(Test);

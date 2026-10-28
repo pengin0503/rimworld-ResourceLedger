@@ -51,7 +51,7 @@ public sealed class LedgerGameComponent : GameComponent {
   if(snapshot.UnsupportedHolders>0)return;
   var id=InventoryReader.MapId(map);Data.MapNames[id]=map.Parent?.LabelCap??("Map "+id);
   var resources=Resources;
-  foreach(var scope in ScopeIds(map))Data.EnsureBaseline(id,scope,snapshot.Tick,Project(snapshot,scope),resources,historical);
+  foreach(var scope in ScopeIds(map))Data.EnsureBaselineLazy(id,scope,snapshot.Tick,()=>Project(snapshot,scope),resources,historical);
  }
  public void Invalidate(string map){
   Data.MarkGap(map);

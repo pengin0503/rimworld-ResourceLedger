@@ -14,12 +14,15 @@ public sealed class InventorySnapshot {
  public static bool Includes(InventoryItem item,string scope,ScopeDefinitionAdapter? custom=null)=>
   scope=="map"||(item.Locator is not Pawn&&(scope=="stored"?item.Group.Length>0:custom!=null&&custom.Groups.Contains(item.Group)));
  public Dictionary<string,long> Project(string scope,ScopeDefinitionAdapter? custom=null){
+  // Read already accumulated map-wide totals, including zeroes for tracked definitions.
+  if(scope=="map")return new Dictionary<string,long>(Counts);
   var result=Counts.Keys.ToDictionary(k=>k,k=>0L);
   foreach(var item in Items)if(Includes(item,scope,custom))result[item.Resource]+=item.Count;
   return result;
  }
  public Dictionary<string,long> ProjectConsumed(string scope,IReadOnlyDictionary<Thing,long> consumed,ScopeDefinitionAdapter? custom=null){
   var result=new Dictionary<string,long>();
+  if(consumed.Count==0)return result;
   foreach(var item in Items){
    if(!Includes(item,scope,custom))continue;
    long amount=Math.Min(item.Count,Math.Max(0,consumed.GetValueOrDefault(item.Thing)));

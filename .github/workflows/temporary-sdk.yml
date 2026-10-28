@@ -11,7 +11,11 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
         with:
           dotnet-version: 10.0.x
-      - run: tar -C "$DOTNET_ROOT" -czf /tmp/dotnet-sdk.tar.gz .
+      - name: Package .NET 10 SDK
+        shell: bash
+        run: |
+          cd "$DOTNET_ROOT"
+          tar -czf /tmp/dotnet-sdk.tar.gz dotnet host/fxr/10.* sdk/10.* shared/Microsoft.NETCore.App/10.* packs/Microsoft.NETCore.App.Ref/10.* packs/Microsoft.AspNetCore.App.Ref/10.* packs/Microsoft.NETCore.App.Host.linux-x64/10.* sdk-manifests/10.*
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: temporary-dotnet-sdk

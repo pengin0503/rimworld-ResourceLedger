@@ -2,7 +2,7 @@
 
 RimWorld 1.7向けに、物資の在庫・具体的な増減数・原因別内訳を確認するMODです。
 
-[配布版](https://github.com/pengin0503/rimworld-ResourceLedger/releases) · [CI](https://github.com/pengin0503/rimworld-ResourceLedger/actions/workflows/verify.yml)
+[配布版](https://github.com/pengin0503/rimworld-ResourceLedger/releases)
 
 0.3.2では、原因別記録で操作ごとに繰り返す初期記録の確認・種類の照合と、在庫走査中の文字列作成を減らしました。0.3.1では、範囲別の集計を減らしました。操作前後のマップ走査は引き続き行います。
 
@@ -69,20 +69,10 @@ CSVはサマリー・履歴・原因別・行動明細を出力します。保�
 
 **0.3.2の画面表示・通常プレイ・セーブ更新を実際にゲームで確認する作業は未実施**です。そのためプレリリースとして配布します。
 
-## 開発・CI
-
-.NET SDK 10を使用します。Windowsでは次のコマンドでビルド・検証・ZIP作成を実行できます。
-
-```powershell
-./build.ps1 -GameDir 'D:/SteamLibrary/steamapps/common/RimWorld' -HarmonyPath 'D:/path/to/1.7/Assemblies/0Harmony.dll' -RunTests
-```
-
-`GameDir` は `Assembly-CSharp.dll`、`UnityStubs.dll`、`Waylith.dll` があるフォルダーです。
-
-GitHub CIはゲーム非依存のコアをビルドしてテストし、翻訳・XML・アイコンと、ビルド済みMOD DLLのソース指紋・ハッシュを検証して配布ZIPを作ります。UIを含む全体ビルドは各自のゲームDLLを参照して行ってください。ゲーム本体DLL・Harmony DLLはリポジトリや配布ZIPに含めません。
-
-mainへの反映で新しいバージョンが検証を通ると、プレリリースを作成します。既存の同じバージョンのリリースは保持します。
-
 ## English
 
-Resource Ledger tracks all discovered owned item types, including equipment and minified furniture. Stock bars and signed flow lines share a timeline with independent readable axes. It includes exact quantities, cause breakdowns, filtering, comparisons, alerts, locations and CSV exports. Requires RimWorld 1.7 and Harmony for 1.7. Install the Mod ZIP in `RimWorld/Mods`. Recording starts after installation; existing 0.1.0 history is preserved. This is an experimental release: actual in-game UI/gameplay validation remains pending.
+Resource Ledger tracks owned item types, stock levels, changes and their causes in RimWorld 1.7. It supports modded resources, equipment and minified furniture; charts, comparisons, filters, alerts and CSV export help inspect trends. Choose the whole map, storage, a particular storage location or all colonies. Tracking starts after installation; unknown past values are not filled with zero. Cause attribution may be incomplete for other mods.
+
+Requires RimWorld 1.7 and Harmony for 1.7. Download the latest `ResourceLedger_<version>_Mod.zip` from [Releases](https://github.com/pengin0503/rimworld-ResourceLedger/releases), extract `ResourceLedger` into `RimWorld/Mods`, enable it after Core and Harmony, then restart. Open the ledger icon in the bottom bar. Existing saves can be used; back them up first.
+
+CSV files are saved in `ResourceLedgerExports` under the RimWorld save-data folder. Recording and retention settings are adjustable. Cause tracking scans map items around supported actions; its effect on large colonies' actual TPS still needs in-game measurement. Version 0.3.2's UI, normal gameplay and save upgrades have not yet been verified in-game.
